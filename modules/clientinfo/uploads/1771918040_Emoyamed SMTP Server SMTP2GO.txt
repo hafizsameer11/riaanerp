@@ -1,0 +1,20 @@
+SMTP Server:  mail-eu.smtp2go.com
+
+SMTP Port: 2525 
+
+Username : Emoyamed
+
+Password : 3MOy@med%221@334
+
+
+DNS Records to add: (as per Picture)
+
+Cnmame : em634593		return.smtp2go.net
+Cname : s634593._domainkey	dkim.smtp2go.net
+Cname : link			track.smtp2go.net
+
+
+Please include in their current SPF :
+
+spf.smtp2go.com
+

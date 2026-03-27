@@ -1,0 +1,9 @@
+Public IP = 41.76.210.223:33667
+Open VPN IP = 172.16.0.14:33667
+User = it assistance
+PW = Fenns@12345
+
+Idrac = 41.76.211.225
+Username = Sautech
+PW = W!ndows@44
+

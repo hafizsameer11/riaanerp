@@ -1,0 +1,23 @@
+Checkpoint VPN Server = Deathadder.onlinehosting.network
+VPN Auth = Certificate
+Certificate = #p12
+
+VPN Users
+
+User: KwantuHasan
+Password: 1XZMOYJ2kd2ACUf8X650
+
+User: KwantuOliver
+Password: jRZwl31Ba88A9NCLtkBt
+
+User: KwantuSatinde
+Password: doJAb28OUM6kKS4szVls
+
+User: KwantuShadley
+Password: c0JpS0Evk74g5QEo4glA
+
+User: KwantuTemp
+Password: Mdj0X6d3aPYFuuiIrqop
+
+User: KwantuWillem
+Password: XyWwnA80Ma8YeKmosqWF

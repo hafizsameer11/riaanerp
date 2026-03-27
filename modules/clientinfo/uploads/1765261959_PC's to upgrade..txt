@@ -1,0 +1,30 @@
+Computer Name:	C222 (in WORKGROUP) — Ben Minnie
+HP HP 250 G5 Notebook PC Type1ProductConfigId
+250GB SSD Upgrade
+
+Computer Name:	C143 (in WORKGROUP)
+Windows Logon:	Christoffer Olaba
+Dell Inc. Vostro 3560 A15
+250GB SSD Upgrade
+
+Computer Name:	C235 (in WORKGROUP) — Leon Joubert
+HP HP 250 G5 Notebook PC Type1ProductConfigId
+250GB SSD Upgrade
+
+Computer Name:	C236 (in WORKGROUP) — Jacob Swanepoel
+HP HP 250 G5 Notebook PC Type1ProductConfigId
+250GB SSD Upgrade
+
+Computer Name:	C247 (in WORKGROUP) — Johan Els
+HP HP 250 G6 Notebook PC Type1ProductConfigId
+250GB SSD Upgrade
+
+Computer Name:	C253 (in WORKGROUP) — Johan Meyer
+HP HP 250 G6 Notebook PC Type1ProductConfigId
+250GB SSD Upgrade
+
+
+
+
+
+

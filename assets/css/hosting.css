@@ -1,0 +1,20 @@
+body {
+    background: #f5f8fc;
+}
+
+h2, h3, h4 {
+    font-weight: 600;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.btn {
+    font-weight: 600;
+}

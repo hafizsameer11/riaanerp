@@ -1,0 +1,58 @@
+IP Range:
+192.168.10/11.0
+255.255.254.0
+192.168.10.2
+
+NAS Access
+https://fw.ruimsigcc.co.za
+User: admin
+Passw: saut3ch
+
+Veeam User Backups (Desktop + Docs)
+User: Backup
+Passw: W!ndows@44
+
+
+Jonas VM
+RDP: fw.ruimsigcc.co.za = Jonas 
+User: ruimsigcc\administrator 
+Passw: W!ndows@44
+
+Jonasadmin (Login)
+Username: ruimsigcc\Jonasadmin
+Password: znU8SWAyN8
+
+Hyper-V host
+RDP: fw.ruimsigcc.co.za:3391  
+User: ruimsigcc\administrator 
+Passw: W!ndows@44
+
+Ziska RDP access
+Server: Jonas.ruimsigcc.co.za
+Username: ruimsigcc\Ziska
+Password: Z!5k@44
+
+Megan RDP access
+Server: Jonas.ruimsigcc.co.za
+Username: ruimsigcc\megan
+Password: M3g@n@44
+
+Marie
+Server: Jonas.ruimsigcc.co.za
+Username: ruimsigcc\marie
+Password: Niane2019@
+
+Pieter RDP access
+Server: Jonas.ruimsigcc.co.za
+Username: ruimsigcc\pieter
+Password: Pi3teR#Rcc
+
+
+Access Control
+Asus Router
+admin
+Icequeen0
+
+w1970
+
+

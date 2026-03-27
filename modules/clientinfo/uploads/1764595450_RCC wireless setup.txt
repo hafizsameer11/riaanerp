@@ -1,0 +1,12 @@
+RCC wireless
+
+reception pc extra netwerk kaart 
+reset ap 192.168.0.1
+los ip op automatic sodat program dit kan optel 
+install program 
+
+le kabel van nuwe netwerk kaart tot waar ap gaan wees.
+
+reset router bel lukas 
+
+

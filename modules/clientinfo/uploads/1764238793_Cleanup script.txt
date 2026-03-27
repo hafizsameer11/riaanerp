@@ -1,0 +1,16 @@
+======================================================
+#!/bin/bash
+
+log_directory="/tmp/f2/supply_chain/global/log"
+
+find "$log_directory" -type f -name "*.log" -size +20G -exec truncate -s 0 {} \;
+=================================================================
+so above script ensures that if the log file size is more then 20+g it will make it empty
+you need to copy the above content in a file den give a file permision and run
+for example
+1-create cleanup.sh scrip 
+2-copy the script conetnet prvided above and save
+3- chaneg permission of the file
+chmod +x cleanup.sh
+4-run the script
+./cleanup.sh

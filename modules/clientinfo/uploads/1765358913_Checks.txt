@@ -1,0 +1,59 @@
+April 2024
+
+Tuna: Done
+Baber: Done
+Web2Go: Done
+Krokodil: Done
+Client Backups: Done
+JAR: Done
+JAR Backup: Done
+Wimico: Done
+RCC: Done
+Sautech NAS: Done
+Trifour: Done
+USA: Done
+Russia: Done
+Ness DR: 
+Tesla: Done
+Dodge: Done
+Catepillar: Done
+Offsite: Done
+
+Mei 2024
+
+Tuna: Done
+Baber: Done
+Web2Go: Done
+Krokodil: Done
+Client Backups: Done
+JAR: Done
+JAR Backup: Done
+Wimico: Done
+RCC: Done
+Sautech NAS: Done
+Trifour: Done
+Trifour Data: Done
+USA: Done
+Russia: Done
+Ness DR: Done
+Tesla: Done
+Dodge: Done
+Offsite: Done
+
+June 2024
+Krokodil - Done 
+Trifour NAS - Done
+Trifour DATA - Done
+Web2Go - Done
+JAR - Nas - Done 
+JAR - Backup NAS - Done 
+Client-Backups - Done 
+Sautech Office - Done 
+Wimico - Done 
+Roodepoort CC - Done 
+Ness Backups - Done
+Tesla: Done
+Dodge: Done
+Russia: Done
+Ness DR: Done
+USA: Done

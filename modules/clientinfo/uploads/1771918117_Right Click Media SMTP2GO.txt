@@ -1,0 +1,28 @@
+Right Click Media SMTP2GO: 
+Rcm@sautech.net
+Password: R!gh+ClicKm#6812
+
+
+Relay Account Details:
+
+
+SMTP Server:  mail-eu.smtp2go.com
+SMTP Port: 2525 
+
+Username : rightclickmedia
+Password : cl!ckRigHTM3di@3434
+
+
+Domain Records :
+
+
+Cname : em634593		return.smtp2go.net
+Cname : s634593._domainkey	dkim.smtp2go.net
+Cname : link			track.smtp2go.net
+
+
+Please include in their current SPF :
+
+spf.smtp2go.com
+
+

@@ -1,0 +1,36 @@
+Hi Lukas,
+
+Below are the Login credentials that are administrative to our linux enviroment
+
+UID : jan
+Passwords : Um0p3p!5dn
+
+Linux Servers -QA
+Qa-service01 (197.242.146.83)
+Qa-webapi01 (154.0.162.222)
+qa-webapi02 (165.73.81.94)
+qa-webfront01 (197.242.148.76)
+
+Linux Servers – Production
+ProfileDB1 (154.0.165.122)
+ProfileDB4 (154.0.163.113)
+ProfileRPT1 (197.242.145.148)
+ProfileWF1 (154.0.165.92)
+ProfileWS1 (154.0.165.89)
+ProfileWS2 (41.76.212.131) dedicated server
+ProfileWS3 (197.242.151.10)
+ProfileWS4 (154.0.170.202)
+ProfileSVC (165.73.82.78)
+
+Windows Production Servers
+ProfileDB2 (197.242.145.14) Main database that was discussed
+
+UID : Gavin
+PW : VYaHdt@cX8r!IIQa
+
+ProfileWF2 (197.242.148.75) This will require you to go remotely through my machine
+
+UID : Administrator
+PW : Um0p3p!5dnPr0f!le@dm!n
+
+If you need help with anything give me a shout

@@ -1,0 +1,16 @@
+RCC User Backups Setup
+
+Nas Login: admin - saut3ch
+
+admin - Nas@44
+
+Backup Password: W!ndows@44
+
+path \\192.168.10.5\Veeam EndPoint Backup\Backup Repository\Wayne CEO
+
+Email Notifications to:
+Rescue@sautech.net Passw: rescue@221
+
+SMTP: smtp.wiru.co.za
+
+Email notification string: Ruimsigcc - Workstation - Wayne CEO - [Veeam] - [%JobResult%] - %CompletionTime%

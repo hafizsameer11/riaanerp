@@ -1,0 +1,4 @@
+Backup Location Server = veeamcloud.onlinehosting.network
+Username = Kinstler
+PW = T944m3GeUG5jkB3G8##0
+

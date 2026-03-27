@@ -1,0 +1,23 @@
+Create folder op c "Certs" 
+Copy 2 x certs 
+
+Powershell
+
+Enable-PSRemoting
+
+Enable-WSManCredSSP -Role server
+
+cd c:\certs
+
+Import-Certificate -CertStoreLocation Cert:\LocalMachine\Root\ -FilePath .\REPLACE MET CA.cer
+
+$mypwd = Get-Credential -UserName 'Enter password below' -Message 'Enter password below'
+
+www!19Kp
+
+Import-PfxCertificate -CertStoreLocation Cert:\LocalMachine\my\ -FilePath .\VDTHyperV02.pfx -Password $mypwd.Password
+
+REG ADD "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization\Replication" /v DisableCertRevocationCheck /d 1 /t REG_DWORD /f
+
+netsh advfirewall firewall set rule group=“Hyper-V Replica HTTPS” new enable=yes
+

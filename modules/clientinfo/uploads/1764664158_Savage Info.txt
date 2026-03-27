@@ -1,0 +1,86 @@
+All DHCP
+
+VM Server - 
+user - root
+password - aJm@k7=Y#He%NB$Q
+
+SHLserver - 30.50.50.50
+user - SHLadmin
+password - aJm@k7=Y#He%NB$Q
+
+user - wendy wiid visser
+password - S@v@g3#2020
+
+user - yvonne kriedemann
+password - S@v@g3#2020
+
+user - de waal uys
+password - S@v@g3#2020
+
+user - christi louw
+password - S@v@g3#2020
+
+user - chanelle huntley
+password - S@v@g3#2020
+
+user - jaco steenekamp
+Password - S@v@g3#2020
+
+user - carla caroto
+password - S@v@g3#2020
+
+Shares
+c:/share - Share - 
+c:/Lsuite - Lsuite - L Drive
+c:/LexisNexis - LexisNexis - S Drive
+
+SHL1 -30.50.50.51
+user - SHLadmin
+password - aJm@k7=Y#He%NB$Q
+
+user - wendy wiid visser
+password - S@v@g3#2020
+
+
+SHL2 -30.50.50.52
+user - SHLadmin
+password - aJm@k7=Y#He%NB$Q
+
+user - yvonne kriedemann
+password - S@v@g3#2020
+
+
+SHL3 - -30.50.50.53
+user - SHLadmin
+password - aJm@k7=Y#He%NB$Q
+
+user - de waal uys
+password - S@v@g3#2020
+
+
+SHL4 -30.50.50.54
+user - SHLadmin
+password - aJm@k7=Y#He%NB$Q
+
+user - christi louw
+password - S@v@g3#2020
+
+
+SHL5 --30.50.50.55
+user - SHLadmin
+password - aJm@k7=Y#He%NB$Q
+
+user - chanelle huntley
+password - S@v@g3#2020
+
+SHL6 -30.50.50.56
+user - SHLadmin
+password - aJm@k7=Y#He%NB$Q
+
+user - jaco steenekamp
+Password - S@v@g3#2020
+
+user - carla caroto
+password - S@v@g3#2020
+
+

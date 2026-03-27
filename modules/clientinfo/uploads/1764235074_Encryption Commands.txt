@@ -1,0 +1,46 @@
+>>Create Cert
+
+USE Master;
+GO
+CREATE MASTER KEY ENCRYPTION
+BY PASSWORD='M@sterK3ySQLInstan@n30three';
+GO
+
+CREATE CERTIFICATE TDE_Cert
+WITH 
+SUBJECT='Database_Encryption';
+GO
+
+USE thelicen_yrlicocms
+GO
+CREATE DATABASE ENCRYPTION KEY
+WITH ALGORITHM = AES_256
+ENCRYPTION BY SERVER CERTIFICATE TDE_Cert;
+GO
+
+ALTER DATABASE thelicen_yrlicocms
+SET ENCRYPTION ON;
+GO
+
+**change database to master then remove below two lines**
+USE Master;
+GO
+BACKUP CERTIFICATE TDE_Cert
+TO FILE = 'C:\temp\TDE_Cert'
+WITH PRIVATE KEY (file='C:\temp\TDE_CertKey.pvk',
+ENCRYPTION BY PASSWORD='M@sterK3ySQLInstan@n30three')
+
+>>Restore Cert
+
+USE Master;
+GO
+CREATE MASTER KEY ENCRYPTION
+BY PASSWORD='M@sterK3ySQLInstan@n30three';
+GO
+
+USE MASTER
+GO
+CREATE CERTIFICATE TDECert
+FROM FILE = 'C:\Temp\TDE_Cert'
+WITH PRIVATE KEY (FILE = 'C:\temp\TDECert_Key.pvk',
+DECRYPTION BY PASSWORD = 'M@sterK3ySQLInstan@n30three' );

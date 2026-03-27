@@ -1,0 +1,58 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$db_host = "localhost";
+    $db_user = "clientzone_user";
+    $db_pass = "S@utech2024!";
+    $db_name = "clientzone";
+
+include_once '../../config.php'; // Ensure this path is correct
+
+
+$query = "SELECT * FROM spla_licenses ORDER BY client, type, vm_name ASC";
+$result = $conn->query($query);
+if (!$result) {
+    die("SQL Error: " . $conn->error);
+}
+?>
+
+<h2>📋 SPLA License List</h2>
+<a href="index.php">➕ Add New</a>
+<br><br>
+
+<table border="1" cellpadding="6" cellspacing="0">
+    <tr>
+        <th>Type</th>
+        <th>Client</th>
+        <th>VM Name</th>
+        <th>vCPUs</th>
+        <th>RAM</th>
+        <th>Disk</th>
+        <th>Windows</th>
+        <th>License Product</th>
+        <th>Quantity</th>
+        <th>Notes</th>
+        <th>Created</th>
+        <th>Actions</th>
+    </tr>
+    <?php while ($row = $result->fetch_assoc()): ?>
+        <tr>
+            <td><?= strtoupper($row['type']) ?></td>
+            <td><?= htmlspecialchars($row['client']) ?></td>
+            <td><?= htmlspecialchars($row['vm_name']) ?></td>
+            <td><?= $row['vcpus'] ?></td>
+            <td><?= $row['ram'] ?></td>
+            <td><?= $row['disk'] ?></td>
+            <td><?= htmlspecialchars($row['windows_version']) ?></td>
+            <td><?= htmlspecialchars($row['ms_products']) ?></td>
+            <td><?= isset($row['quantity']) ? $row['quantity'] : 1 ?></td>
+            <td><?= nl2br(htmlspecialchars($row['notes'])) ?></td>
+            <td><?= $row['created_at'] ?? '-' ?></td>
+            <td>
+                <a href="edit.php?id=<?= $row['id'] ?>">Edit</a>
+            </td>
+        </tr>
+    <?php endwhile; ?>
+</table>
+

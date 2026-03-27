@@ -1,0 +1,27 @@
+support@sautech.net
+www!19Kp@66www!
+
+Teamviewer
+392 932 259 - www!19Kp - Welkom
+392 939 961 - www!19Kp - Alberton
+392 942 839 - www!19Kp - Krugersdorp
+392 943 146 - www!19Kp - Bryanston
+
+
+Networks
+192.168.8.253/23 - Welkom - 105.29.148.42/29 - GW 41
+192.168.0.253/24 - Alberton - 105.22.39.92/30 - GW 93
+192.168.7.253/24 - Krugersdorp
+192.168.26.253/24 - Bryanston
+
+Alrode Checkpoint FW:
+https://105.30.56.13:4434/
+admin
+www!19Kp
+
+Welkom Checkpoint FW:
+https://105.29.148.43:4434/
+admin
+www!19Kp
+
+

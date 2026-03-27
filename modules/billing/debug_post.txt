@@ -1,0 +1,24 @@
+Array
+(
+    [client_id] => 7
+    [billing_type] => 
+    [currency] => 
+    [supplier_id] => 1
+    [service_type_id] => 1
+    [service_category_id] => 3
+    [cpu] => 
+    [memory] => 
+    [hdd_sata] => 
+    [hdd_ssd] => 
+    [os] => 
+    [ip_address] => 
+    [description] => 
+    [quantity] => 1
+    [unit_price] => 15.27
+    [vat_rate] => 15
+    [invoice_frequency] => once_off
+    [start_date] => 2025-04-24
+    [end_date] => 2025-04-29
+    [charge_vat] => 1
+    [action] => add
+)

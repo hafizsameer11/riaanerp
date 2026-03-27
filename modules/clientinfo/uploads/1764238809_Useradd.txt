@@ -1,0 +1,10 @@
+How to add users:
+useradd -d /home/bpafrica -m -G eroute2market bpafrica
+
+How to grant permission to directory:
+setfacl -Rm u:bpafrica:rwx /home/bp/data/ 
+
+example /home/test/data/
+
+How to remove a user:
+luser --remove-home username

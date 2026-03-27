@@ -1,0 +1,98 @@
+eroute2market.co.za/
+There is a webmin for server 1 :
+http://server.eroute2market.co.za:34500/ 
+user: root
+pwd:  b!K<L6*=xh~tsYD~
+
+DEV server: 41.76.209.205
+waynel
+w4yne jaagkkyt##@3 / (;.z2[=Z/tMFtq<9R)
+
+Su
+JAagJtKyP3488 / (b!K<L6*=xh~tsYD~)
+
+docker run -d -it --privileged=true --net=host --name=Db2wh -v /mnt/clusterfs:/mnt/bludata0 -v /mnt/clusterfs:/mnt/blumeta0 store/ibmcorp/db2wh_ce:<version>-db2wh_devc-linux
+
+sautechsupport
+cP8aFcDH)8@Cr-WZ
+
+
+
+Database server: 41.76.214.182
+waynel
+w4yne jaagkkyt##@3 / ([X!gZ)]PezfL*J3%)
+
+Su
+JAagJtKyP3488 / (Cg2W+<CSZQLbNuuV)
+
+BspBMYoA8fahoxkH
+sautechsupport
+cP8aFcDH)8@Cr-WZ
+
+
+Server 3 
+gunzip < 20200118\[040001\]_supply_chain_.sql.gz | mysql -u root -p supply_chain
+ssh/sftp: eroute2marketptyltd.dedicated.co.za
+username: root
+password: BspBMYoA8fahoxkH 
+
+ 
+
+Webmin
+https://eroute2marketptyltd.dedicated.co.za:10000/
+A SQL query goes to a bar, walks up to two tables and asks...Can I Join you?
+ 
+
+PhpMyAdmin
+http://eroute2marketptyltd.dedicated.co.za/phpmyadmin
+
+
+SELECT 'Hide' as Hide, i.SellerCode, s.ID, s.Name AS Seller, i.ProductCode AS Code, i.ProductDescription AS Description , MIN(i.Date) StartDate, MAX(i.Date) EndDate, us.Name as Manufacturer 
+FROM sc_transaction_import AS i 
+INNER JOIN sc_seller AS s ON (s.Code=i.SellerCode) 
+LEFT JOIN sc_product_matching AS pm ON ((i.ProductDescription=pm.ProductDescription) AND (i.ProductCode=pm.ProductCode) AND (s.ID=pm.ScSellerID)) 
+LEFT JOIN sc_unknown_products_manufacturer upm on i.ProductDescription = upm.ProductDescription AND i.ProductCode = upm.ProductCode AND i.SellerCode = upm.SellerCode 
+left join sc_seller us on upm.ScSellerID = us.id 
+WHERE (pm.ProductCode IS NULL) 
+GROUP BY s.ID, s.Name, i.ProductCode, i.ProductDescription ORDER BY i.Date, i.ProductCode, i.ProductDescription
+
+New DEV:
+http://156.38.150.226/phpmyadmin/index.php
+dev.eroute2market.com
+ALTER USER root IDENTIFIED WITH mysql_native_password BY 'BspBMYoA8fahoxkH';
+gunzip < month_end.sql.gz | mysql -u root -pBspBMYoA8fahoxkH month_end
+
+
+new db server:
+156.38.150.228
+root Kf/g!o?0(:6t
++8e=wST=*gLd9=7tmKtY*8*
+New Frontend:
+156.38.150.227
+frontend.eroute2market.com
+#^4Ev%7dEq@K@zz4$L=BYd=
+
+New Stockit server:
+156.38.150.229
+leon
+
+Server: relay.sautech.co.za
+Port: 2525
+Username: eroute2market
+Password: er0ut32%432
+
+/usr/local/eroute2market/supply_chain/scripts/tightline_mushroom_conversion.php
+scp 20200213[040001]_supply_chain_.sql.gz leonvz@156.38.150.226:/home/leonvz/db
+
+/usr/bin/php /usr/local/eroute2market/supply_chain/scripts/tightline_mushroom_conversion.php
+
+SELECT * FROM INFORMATION_SCHEMA.events;
+
+-Ex8$qaN5WMK#W+^…
+
+awk -F: '{ print $1}' /etc/passwd
+
+
+
+
+

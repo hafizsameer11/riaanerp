@@ -1,0 +1,6 @@
+Array
+(
+    [client_id] => 190
+    [device_type] => 
+    [location] => 
+)

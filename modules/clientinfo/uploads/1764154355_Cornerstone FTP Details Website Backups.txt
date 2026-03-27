@@ -1,0 +1,13 @@
+Cornerstone FTP Details
+ftp.onlinehosting.co.za
+Username : Cornerstone
+Password : ::t9Yq#If0nCzgIaqV+71
+/
+Transfer SCP
+
+E:\FTP\Cornerstone Website Backups
+
+FileZilla
+ftpbackups.onlinehosting.co.za	      
+CSVoice	    
+C$v01ce@665

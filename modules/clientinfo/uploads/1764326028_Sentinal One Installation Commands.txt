@@ -1,0 +1,3 @@
+rpm -i --nodigest package_pathname.rpm
+sentinelctl management token set eyJ1cmwiOiAiaHR0cHM6Ly9ldWNlMS1leGNsdXNpdmUuc2VudGluZWxvbmUubmV0IiwgInNpdGVfa2V5IjogIjFkOWU1NjZiZWI1MDBlMWMifQ==
+sentinelctl control start

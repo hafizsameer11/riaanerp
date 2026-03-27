@@ -1,0 +1,58 @@
+=== 2025-04-22 12:44:49 ===
+Array
+(
+    [client_id] => 6
+    [support_type] => Hosted Exchange
+    [field1] => fwf
+    [field2] => fwfw
+    [field3] => fwf
+    [field4] => fwfw
+    [field5] => fwfw
+    [note] => fwfw
+)
+=== 2025-04-22 12:44:49 ===
+Array
+(
+)
+=== 2025-04-22 12:44:49 ===
+Array
+(
+    [client_id] => 6
+    [support_type] => Hosted Exchange
+    [field1] => sdada
+    [field2] => dada
+    [field3] => dada
+    [field4] => dada
+    [field5] => dada
+    [note] => dada
+)
+=== 2025-04-22 12:44:49 ===
+Array
+(
+    [client_id] => 7
+    [support_type] => Hosted Exchange
+    [field1] => 
+    [field2] => Test
+    [field3] => test
+    [field4] => test
+    [field5] => 
+    [new_spamtitan] => test
+    [note] => test
+)
+=== 2025-04-22 12:44:49 ===
+Array
+(
+    [client_id] => 6
+    [support_type] => Hosted Exchange
+    [field1] => fsfsf
+    [field2] => fsfs
+    [field3] => fsfs
+    [field4] => fsfs
+    [field5] => 
+    [new_spamtitan] => fsfs
+    [note] => fsfs
+)
+=== 2025-04-22 12:44:49 ===
+Array
+(
+)

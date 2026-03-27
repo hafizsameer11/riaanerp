@@ -1,0 +1,10 @@
+Mail
+Roland.Selb@trifour-psu.com
+R0l@nd+83%
+
+365
+Roland.Selb@trifour-psu.com
+S3lbR0l@nd#562
+
+
+REG ADD HKCU\Software\Microsoft\Office\16.0\Outlook\AutoDiscover /v ExcludeExplicitO365Endpoint /t REG_DWORD /d 1

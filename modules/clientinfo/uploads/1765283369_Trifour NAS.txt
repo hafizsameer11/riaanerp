@@ -1,0 +1,12 @@
+Trifour Cloud
+
+Admin
+CloudTri3f0ur$!99
+156.38.150.239
+Trifourcloud.onlinehosting.network
+
+Backup to Office
+Office NAS IP = 197.234.170.226
+Office NAS volume = Cloudconnect
+Username = Backups
+Password = B@ckuP$#@11

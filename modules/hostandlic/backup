@@ -1,0 +1,22 @@
+<!-- Support Values Section -->
+    <div class="card p-4 shadow-sm mb-5">
+      <h4 class="text-success mb-4">Add / Delete Support Values</h4>
+      <form method="POST" class="row g-4">
+        <?php foreach (['location', 'asset_type', 'host', 'os'] as $field): ?>
+          <div class="col-md-6">
+            <input type="text" name="new_<?= $field ?>" class="form-control" placeholder="New <?= ucwords(str_replace('_', ' ', $field)) ?>">
+            <button type="submit" name="add_<?= $field ?>" class="btn btn-success btn-sm mt-2 w-100">Add</button>
+          </div>
+
+          <div class="col-md-6">
+            <select name="remove_<?= $field ?>" class="form-select">
+              <option value="">Delete <?= ucwords($field) ?></option>
+              <?php foreach ($support[$field] as $val): ?>
+                <option value="<?= $val ?>"><?= $val ?></option>
+              <?php endforeach; ?>
+            </select>
+            <button type="submit" name="delete_<?= $field ?>" class="btn btn-danger btn-sm mt-2 w-100">Delete</button>
+          </div>
+        <?php endforeach; ?>
+      </form>
+    </div>

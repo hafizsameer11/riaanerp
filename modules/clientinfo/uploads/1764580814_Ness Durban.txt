@@ -1,0 +1,14 @@
+Durban
+
+Internal
+
+10.0.1.0/24
+FW = 10.0.1.254
+NAS = 10.0.1.253
+	= Nas@44
+AP's = 10.0.1.1/2
+	= Ne$$Durb@n@434
+TV Kamera = 10.0.1.3
+
+Toshiba Printer = 10.0.1.200
+

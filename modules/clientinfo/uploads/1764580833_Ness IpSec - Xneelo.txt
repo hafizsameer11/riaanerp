@@ -1,0 +1,19 @@
+dvDVmPtQd8wx6e6T - Preshared Key
+
+172.20.19.0/29
+255.255.255.248
+
+Ness HO = 41.160.118.227 - 255.255.255.248 - 10.0.0.0/24
+Ness Durban = 41.162.104.90 - 255.255.248.0 - 10.0.1.0/24
+Ness Potch = 154.126.220.202 - 255.255.255.248 - 192.168.87.0/24
+
+Phase1
+AES-256
+SHA1
+Group 2
+1440 - Renegotiate
+
+Phase2
+AES-256
+SHA1
+3600 - Renegotiate

@@ -1,0 +1,243 @@
+body {
+	color: black; font-family: Arial,Helvetica,sans-serif; font-weight: normal; background-color: white;
+}
+a:link {
+	color: rgb(0, 83, 153);
+}
+a:visited {
+	color: rgb(0, 83, 153);
+}
+a img {
+	border: 0px currentColor; border-image: none;
+}
+div {
+	margin: 0px; padding: 0px;
+}
+tr {
+	vertical-align: top;
+}
+td {
+	text-align: left; padding-right: 0.5em; padding-left: 0.5em;
+}
+th {
+	text-align: left; padding-right: 0.5em; padding-left: 0.5em;
+}
+div.pageHeader {
+	width: 100%; text-align: center;
+}
+div.leftNavBar {
+	width: 10%; font-size: 75%; font-weight: bold; margin-right: 4%; float: left;
+}
+div.rightSideBar {
+	width: 27%; font-size: 75%; margin-left: 2%; float: right;
+}
+div.pageBody {
+	overflow: hidden; font-size: 83%;
+}
+div.licenseNotice {
+	text-align: left; font-size: 90%; margin-right: 1em; margin-left: 15%;
+}
+div.navBlock {
+	width: 6em; padding-right: 1em; padding-left: 1em; margin-left: 10%; background-color: rgb(248, 248, 248);
+}
+a.navItem {
+	padding-top: 0.75em; padding-bottom: 0.75em; display: block;
+}
+div.blurb {
+	padding: 1em 5%; width: 90%; text-align: center; clear: both; font-family: Arial,Helvetica,sans-serif; font-size: 120%; font-weight: bold;
+}
+div.sss {
+	width: 90%; margin-left: 5%; background-color: rgb(244, 244, 244);
+}
+div.sssItem {
+	border-width: 0px 2px 2px 0px; border-style: solid; width: 100%;
+}
+div.sssItem table {
+	border: 1px solid rgb(232, 232, 232); border-image: none; width: 100%;
+}
+div.sssUnknown {
+	border-color: rgb(200, 200, 200);
+}
+div.sssUnknown th {
+	text-align: center; background-color: rgb(232, 232, 232);
+}
+div.sssUnknown td {
+	vertical-align: middle; background-color: rgb(240, 240, 240);
+}
+div.sssOk {
+	border-color: rgb(176, 208, 176);
+}
+div.sssOk th {
+	text-align: center; background-color: rgb(220, 255, 220);
+}
+div.sssOk td {
+	vertical-align: middle; background-color: rgb(239, 255, 239);
+}
+div.sssAlert {
+	border-color: rgb(224, 192, 192);
+}
+div.sssAlert th {
+	text-align: center; background-color: rgb(255, 240, 240);
+}
+div.sssAlert td {
+	vertical-align: middle; background-color: rgb(255, 248, 248);
+}
+div.sssOk2 {
+	border-color: rgb(184, 184, 208);
+}
+div.sssOk2 th {
+	text-align: center; background-color: rgb(232, 232, 255);
+}
+div.sssOk2 td {
+	vertical-align: middle; background-color: rgb(240, 240, 255);
+}
+div.sssAlert2 {
+	border-color: rgb(224, 224, 176);
+}
+div.sssAlert2 th {
+	text-align: center; background-color: rgb(255, 255, 207);
+}
+div.sssAlert2 td {
+	vertical-align: middle; background-color: rgb(255, 255, 239);
+}
+div.report {
+	
+}
+div.reportWatermark {
+	transform-origin: 0% 120px; left: 0px; height: 0px; color: gray; letter-spacing: 8px; font-size: 750%; font-weight: bold; display: block; white-space: nowrap; position: relative; z-index: 99; opacity: 0.25; pointer-events: none; transform: rotate(50deg);
+}
+h1.reportTitle {
+	text-align: center; font-size: 140%; margin-top: 0.5em; margin-bottom: 0.25em; vertical-align: middle; display: block;
+}
+table.reportHeader {
+	width: 100%;
+}
+table.reportHeader th {
+	text-align: right; font-style: italic; font-weight: normal;
+}
+table.reportHeader td {
+	text-align: left; padding-left: 0px;
+}
+div.reportFooter {
+	width: 95%; text-align: left; padding-right: 5%; padding-left: 1em; margin-top: 1em;
+}
+div.copyright {
+	width: 100%; text-align: center; margin-top: 1em;
+}
+div.reportSection {
+	width: 100%; text-align: center; clear: both; float: none;
+}
+div.rsLeft {
+	width: 49%; overflow: hidden; clear: both; margin-right: 1%; float: left;
+}
+div.rsRight {
+	width: 49%; overflow: hidden; clear: none; margin-left: 1%; float: left;
+}
+div.reportSection > table {
+	width: 100%; margin-top: 6px;
+}
+div.reportSection > table > caption {
+	background: rgb(240, 240, 240); border: 1px solid rgb(224, 224, 224); border-image: none; height: 1.5em; text-align: center; padding-bottom: 2px; font-weight: bold; vertical-align: bottom; display: table-cell;
+}
+span.rsCaptionNote {
+	font-size: 90%; font-weight: normal;
+}
+div.rsFooter {
+	text-align: center; padding-right: 5%; padding-left: 5%; clear: both; margin-top: 0.5em; float: none;
+}
+div.footnoteList {
+	text-align: left; display: inline-block;
+}
+span.swLinkI {
+	color: rgb(0, 83, 153); font-family: Verdana,Arial,Helvetica,sans-serif; font-weight: bold;
+}
+span.swLinkBar {
+	color: rgb(191, 49, 26); font-family: Arial,Helvetica,sans-serif; font-weight: bold; text-decoration: none;
+}
+span.swBits {
+	color: green; font-size: 80%; font-weight: bold; white-space: nowrap;
+}
+a.swLink {
+	text-decoration: none;
+}
+table.bkReportHeader {
+	width: 100%;
+}
+table.bkReportHeader th {
+	padding: 2px; text-align: left; font-size: 110%; font-weight: bold;
+}
+table.bkReportHeader td {
+	padding: 2px; text-align: left;
+}
+div.bkReportBody {
+	width: 100%; margin-top: 1em; margin-bottom: 0.5em;
+}
+table.bkReportBody {
+	width: 100%; margin-top: 1em; margin-bottom: 0.5em;
+}
+table.bkReportBody th {
+	text-align: right; font-weight: normal;
+}
+table.bkReportBody td {
+	text-align: left; font-weight: normal;
+}
+table.bkReportBody .shade {
+	background-color: rgb(240, 240, 240);
+}
+table.bkReportSection {
+	width: 100%; margin-top: 0.5em; margin-bottom: 0.5em;
+}
+table.bkReportSection > thead tr {
+	vertical-align: middle; background-color: rgb(240, 240, 240);
+}
+table.bkReportSection > thead th {
+	padding: 2px; text-align: left; font-weight: bold;
+}
+table.bkReportSection > thead td {
+	text-align: right; white-space: nowrap;
+}
+table.bkReportSection > tbody th {
+	text-align: right; padding-left: 0px; font-weight: normal;
+}
+table.bkReportSection > tbody td {
+	text-align: left;
+}
+table.bkReportSection .noshade {
+	background-color: white;
+}
+div.bkWarningBox {
+	padding: 5px; border: 1px solid red; border-image: none; width: 450px; text-align: center; color: red; display: inline-block;
+}
+.caution {
+	font-weight: bold;
+}
+.warning {
+	color: red; font-weight: bold;
+}
+.alert {
+	color: red;
+}
+span.new {
+	color: rgb(183, 31, 37); font-weight: bold;
+}
+@media print
+{
+body {
+	margin: 0px; line-height: 1em; font-family: "Bookman Old Style",Georgia,"Times New Roman",Times,serif; font-size: 10pt; word-spacing: 0.1em;
+}
+a:link {
+	color: black; text-decoration: none;
+}
+a:visited {
+	color: black; text-decoration: none;
+}
+div.leftNavBar {
+	display: none;
+}
+div.rightSideBar {
+	display: none;
+}
+div.licenseNotice {
+	text-align: left; margin-right: 1em; margin-left: 1em;
+}
+}

@@ -1,0 +1,19 @@
+Default IP: 192.168.1.64:8000
+User: admin
+Passw: 12345
+
+NAS User
+Re-Solve
+RS@dmin123
+
+Potch
+Camera 1
+IP: 192.168.8.50
+User: admin
+Passw: RSc@m123
+
+Camera 2
+IP: 192.168.8.51
+Passw: RSc@m123
+
+Surveillance Station Client
