@@ -323,6 +323,44 @@ if (isset($_GET['logout']) && $_GET['logout'] == 1) {
           </div>
         <?php endif; ?>
 
+        <!-- Helpdesk -->
+        <?php
+        $helpdeskNavOk = (isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin')
+          || (isset($_SESSION['permissions']['helpdesk']) && count($_SESSION['permissions']['helpdesk']) > 0);
+        ?>
+        <?php if ($helpdeskNavOk): ?>
+          <a href="" class="tabbtn" data-src="modules/helpdesk/index.php">Helpdesk</a>
+          <div class="sub-tabs" style="display:none;padding-left:20px">
+            <?php if (hasPermission('helpdesk', 'dashboard')): ?>
+              <a href="#" data-src="modules/helpdesk/index.php" class="sub-tabbtn w-100">Dashboard</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'create ticket')): ?>
+              <a href="#" data-src="modules/helpdesk/ticket_new.php" class="sub-tabbtn w-100">New Request</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'scheduled')): ?>
+              <a href="#" data-src="modules/helpdesk/scheduled.php" class="sub-tabbtn w-100">Scheduled Calls</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'requesters')): ?>
+              <a href="#" data-src="modules/helpdesk/requesters.php" class="sub-tabbtn w-100">Requesters</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'merge tickets')): ?>
+              <a href="#" data-src="modules/helpdesk/merge.php" class="sub-tabbtn w-100">Merge Tickets</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'admin mail')): ?>
+              <a href="#" data-src="modules/helpdesk/admin/mail_settings.php" class="sub-tabbtn w-100">Mail Settings</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'admin mail')): ?>
+              <a href="#" data-src="modules/helpdesk/admin/templates.php" class="sub-tabbtn w-100">Email Templates</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'admin mail')): ?>
+              <a href="#" data-src="modules/helpdesk/admin/rules.php" class="sub-tabbtn w-100">Notification Rules</a>
+            <?php endif; ?>
+            <?php if (hasPermission('helpdesk', 'reports')): ?>
+              <a href="#" data-src="modules/helpdesk/reports/index.php" class="sub-tabbtn w-100">Reports</a>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
+
         <!-- report -->
         <?php if (hasPermission('report and admin')): ?>
           <a href="" class="tabbtn" data-src="modules/reports/index.php">Reporting and Admin</a>

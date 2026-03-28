@@ -1,0 +1,177 @@
+PHP Fatal error:  Uncaught mysqli_sql_exception: No such file or directory in /Users/macbookpro/riaanerp/config.php:9
+Stack trace:
+#0 /Users/macbookpro/riaanerp/config.php(9): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'clientzone')
+#1 /Users/macbookpro/riaanerp/modules/helpdesk/cron/run_scheduled.php(7): require_once('/Users/macbookp...')
+#2 {main}
+  thrown in /Users/macbookpro/riaanerp/config.php on line 9
+
+Fatal error: Uncaught mysqli_sql_exception: No such file or directory in /Users/macbookpro/riaanerp/config.php:9
+Stack trace:
+#0 /Users/macbookpro/riaanerp/config.php(9): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'clientzone')
+#1 /Users/macbookpro/riaanerp/modules/helpdesk/cron/run_scheduled.php(7): require_once('/Users/macbookp...')
+#2 {main}
+  thrown in /Users/macbookpro/riaanerp/config.php on line 9
+PHP Fatal error:  Uncaught Error: Undefined constant "HELPDESK_ROOT" in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php:7
+Stack trace:
+#0 /Users/macbookpro/riaanerp/modules/helpdesk/cron/run_scheduled.php(8): require_once()
+#1 {main}
+  thrown in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php on line 7
+
+Fatal error: Uncaught Error: Undefined constant "HELPDESK_ROOT" in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php:7
+Stack trace:
+#0 /Users/macbookpro/riaanerp/modules/helpdesk/cron/run_scheduled.php(8): require_once()
+#1 {main}
+  thrown in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php on line 7
+PHP Fatal error:  Uncaught Error: Undefined constant "HELPDESK_ROOT" in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php:7
+Stack trace:
+#0 /Users/macbookpro/riaanerp/modules/helpdesk/cron/run_scheduled.php(8): require_once()
+#1 {main}
+  thrown in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php on line 7
+
+Fatal error: Uncaught Error: Undefined constant "HELPDESK_ROOT" in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php:7
+Stack trace:
+#0 /Users/macbookpro/riaanerp/modules/helpdesk/cron/run_scheduled.php(8): require_once()
+#1 {main}
+  thrown in /Users/macbookpro/riaanerp/modules/helpdesk/includes/functions.php on line 7
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK

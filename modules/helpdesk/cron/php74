@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+
+docker run --rm \
+  -v "$PROJECT_ROOT:/app" \
+  -w /app \
+  -e DB_HOST_OVERRIDE=host.docker.internal \
+  php74-imap \
+  php "$@"
