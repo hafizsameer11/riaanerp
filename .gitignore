@@ -1,1 +1,11 @@
 /vendor/
+
+# Backup monitoring — runtime logs (grow without bound; GitHub limit 100 MB)
+modules/backup_monitoring/cron/cron_log.txt
+modules/backup_monitoring/cron/cron_log_backup*.txt
+modules/backup_monitoring/cron/logs/*.txt
+modules/backup_monitoring/cron/logs/*.log
+
+# Helpdesk cron runtime logs
+modules/helpdesk/cron/logs/*.log
+modules/helpdesk/cron/logs/*.out
