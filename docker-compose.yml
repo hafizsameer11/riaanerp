@@ -1,0 +1,95 @@
+# RiaanERP: MySQL + PHP 8.2 Apache (large import limits) + Helpdesk POP (PHP 7.4 + IMAP)
+#
+# Copy .env.example -> .env, then:
+#   docker compose up -d --build
+# App: http://localhost:8080  | phpMyAdmin: http://localhost:8081
+# MySQL: localhost:3306  (stop XAMPP MySQL first, or change left side to "3307:3306")
+#
+# Import a large dump:
+#   docker compose exec -T db mysql -uroot -p"$MYSQL_ROOT_PASSWORD" clientzone < backup.sql
+# Or from host (PowerShell): Get-Content backup.sql | docker compose exec -T db mysql -uroot -pclientzone clientzone
+
+name: riaanerp
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: riaanerp-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-clientzone}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-clientzone}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    container_name: riaanerp-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html
+      # Docker-only DB settings; project config.php stays unchanged for live/XAMPP
+      - ./docker/config.php:/var/www/html/config.php
+      - ./docker/config.php:/var/www/html/modules/config.php
+    environment:
+      DB_HOST: ${DB_HOST:-db}
+      DB_USER: ${DB_USER:-root}
+      DB_PASS: ${DB_PASS:-clientzone}
+      DB_NAME: ${DB_NAME:-clientzone}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  phpmyadmin:
+    image: phpmyadmin:5-apache
+    container_name: riaanerp-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PMA_PORT:-8081}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-clientzone}
+      UPLOAD_LIMIT: 2048M
+      MEMORY_LIMIT: 512M
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # POP sync: PHP 7.4 + IMAP; uses same DB service (not host.docker.internal)
+  helpdesk-php74:
+    build:
+      context: .
+      dockerfile: modules/helpdesk/cron/Dockerfile.php74-imap
+    image: riaanerp-helpdesk-php74:latest
+    profiles:
+      - tools
+    volumes:
+      - .:/app
+      - ./docker/config.php:/app/config.php
+      - ./docker/config.php:/app/modules/config.php
+    working_dir: /app
+    environment:
+      DB_HOST_OVERRIDE: db
+      DB_USER: ${DB_USER:-root}
+      DB_PASS: ${DB_PASS:-clientzone}
+      DB_NAME: ${DB_NAME:-clientzone}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

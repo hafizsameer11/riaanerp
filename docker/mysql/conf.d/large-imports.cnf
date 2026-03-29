@@ -1,0 +1,11 @@
+[mysqld]
+# Large SQL dumps and bulk data (adjust if RAM is tight)
+max_allowed_packet=1G
+innodb_buffer_pool_size=512M
+innodb_log_buffer_size=64M
+innodb_log_file_size=512M
+net_read_timeout=600
+net_write_timeout=600
+wait_timeout=600
+interactive_timeout=600
+max_connections=200

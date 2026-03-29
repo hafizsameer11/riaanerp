@@ -45,14 +45,19 @@ $rules = $conn->query('SELECT r.*, t.name AS template_name, t.code AS template_c
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?= hd_ui_css() ?>
 </head>
-<body class="p-4">
-<div class="container" style="max-width: 860px;">
-    <h3 class="hd-page-title mb-1">Notification rules</h3>
-    <p class="hd-page-subtitle">Map Helpdesk events to templates and control whether each notification is active.</p>
+<body class="py-4">
+<div class="hd-shell hd-shell-medium">
+    <header class="hd-page-hero mb-3">
+        <h3 class="hd-heading mb-1">Notification rules</h3>
+        <p class="text-muted small mb-0">Map Helpdesk events to templates and control whether each notification is active.</p>
+    </header>
     <?php if ($msg): ?><div class="alert alert-info"><?= hd_esc($msg) ?></div><?php endif; ?>
 
-    <form method="post" class="card card-body hd-card mb-4">
-        <div class="row g-2">
+    <div class="card hd-filter-card hd-card mb-4">
+        <div class="card-header">Add or update rule</div>
+        <div class="card-body">
+    <form method="post">
+        <div class="row g-3">
             <div class="col-md-4">
                 <label class="form-label">Event</label>
                 <select name="event_code" class="form-select" required>
@@ -78,29 +83,38 @@ $rules = $conn->query('SELECT r.*, t.name AS template_name, t.code AS template_c
                 </div>
             </div>
         </div>
-        <div class="mt-3">
-            <button class="btn btn-primary" name="save_rule" value="1">Save rule</button>
-            <a class="btn btn-secondary" href="../index.php">Back</a>
+        <div class="pt-2 border-top mt-3">
+            <button class="btn btn-primary fw-semibold px-3" name="save_rule" value="1">Save rule</button>
+            <a class="btn btn-outline-secondary px-3" href="../index.php">Back to dashboard</a>
         </div>
     </form>
+        </div>
+    </div>
 
-    <table class="table table-striped bg-white shadow-sm">
-        <thead><tr><th>Event</th><th>Template</th><th>Active</th><th></th></tr></thead>
-        <tbody>
-        <?php while ($r = $rules->fetch_assoc()): ?>
-            <tr>
-                <td><?= hd_esc($r['event_code']) ?></td>
-                <td><?= hd_esc($r['template_name'] ?: $r['template_code']) ?></td>
-                <td><?= !empty($r['is_active']) ? 'Yes' : 'No' ?></td>
-                <td>
-                    <form method="post" class="d-inline" onsubmit="return confirm('Delete this rule?');">
-                        <button class="btn btn-sm btn-outline-danger" name="delete_rule" value="<?= (int) $r['id'] ?>">Delete</button>
-                    </form>
-                </td>
-            </tr>
-        <?php endwhile; ?>
-        </tbody>
-    </table>
+    <div class="card hd-table-card">
+        <div class="card-header fw-semibold">Current rules</div>
+        <div class="card-body p-0">
+            <div class="hd-table-wrap">
+                <table class="table table-striped table-hover hd-data-table mb-0">
+                    <thead><tr><th>Event</th><th>Template</th><th>Active</th><th class="text-end">Actions</th></tr></thead>
+                    <tbody>
+                    <?php while ($r = $rules->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= hd_esc($r['event_code']) ?></td>
+                            <td><?= hd_esc($r['template_name'] ?: $r['template_code']) ?></td>
+                            <td><?= !empty($r['is_active']) ? 'Yes' : 'No' ?></td>
+                            <td class="text-end">
+                                <form method="post" class="d-inline" onsubmit="return confirm('Delete this rule?');">
+                                    <button class="btn btn-sm btn-outline-danger" name="delete_rule" value="<?= (int) $r['id'] ?>">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>

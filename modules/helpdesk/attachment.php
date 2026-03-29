@@ -16,9 +16,7 @@ if (!$row || $row['merged_into_ticket_id']) {
 
 $tid = (int) $row['ticket_id'];
 $t = $conn->query('SELECT assigned_user_id FROM helpdesk_tickets WHERE id = ' . $tid)->fetch_assoc();
-$uid = (int) $_SESSION['user_id'];
-$isAdmin = isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin';
-if (!$isAdmin && !hd_can('edit ticket') && (int) $t['assigned_user_id'] !== $uid) {
+if (!$t || !hd_may_view_ticket_as_staff($t['assigned_user_id'] ?? null)) {
     http_response_code(403);
     die('Access denied.');
 }

@@ -57,7 +57,14 @@ This document lists files that were **created or modified** for the Helpdesk imp
 |------|------|
 | `modules/helpdesk/cron/pop_sync.php` | POP3 ingest, threading, attachments, ticket create/reply. |
 | `modules/helpdesk/cron/run_scheduled.php` | Overdue refresh + scheduled job runner. |
-| `modules/helpdesk/cron/php74` | Wrapper script for PHP 7.4 + IMAP (e.g. Docker). |
+| Root `docker-compose.yml` | `db` (MySQL), `web` (PHP 8.2 Apache), `helpdesk-php74` (profile `tools` for POP). |
+| `docker/README.md` | How to run stack, import dumps, ports. |
+| `modules/helpdesk/cron/php74` | Bash wrapper: `docker compose run` (or legacy `USE_LEGACY_PHP74_DOCKER=1` + `docker run`). |
+| `modules/helpdesk/cron/docker-php74.ps1` | PowerShell: `docker compose run` for POP sync. |
+| `modules/helpdesk/cron/pop-sync-docker.cmd` | Windows CMD: `docker compose run` POP (manual). |
+| `helpdesk-pop-sync.ps1` (project root) | Manual POP sync (Docker), no schedule. |
+| `helpdesk-pop-sync.cmd` (project root) | Same as `.ps1`, for CMD double-click. |
+| `.dockerignore` (project root) | Smaller Docker build context. |
 | `modules/helpdesk/cron/Dockerfile.php74-imap` | Docker image for PHP 7.4 CLI with IMAP. |
 | `modules/helpdesk/cron/README_CRON.md` | Cron setup notes. |
 
@@ -79,9 +86,11 @@ This document lists files that were **created or modified** for the Helpdesk imp
 
 | File | Role |
 |------|------|
-| `modules/helpdesk/POP_SMTP_LIVE_SETUP.md` | Live POP/SMTP setup, cron, PHP 7.4 split-runtime notes. |
+| `modules/helpdesk/POP_SMTP_LIVE_SETUP.md` | Live POP/SMTP setup, PHP 7.4 split-runtime notes. |
+| `modules/helpdesk/POP_CRON_LINUX_SERVER.md` | Linux production `crontab` for POP + `run_scheduled.php`. |
 | `modules/helpdesk/HELPDESK_CHANGED_FILES.md` | This file — inventory of changed/added paths. |
 | `modules/helpdesk/HELPDESK_MODULE_HANDOFF.md` | Handoff: what’s done, gaps, doc index, new-machine setup. |
+| `modules/helpdesk/REQUIREMENTS_TRACEABILITY.md` | Spec (PDF) vs implementation matrix, gaps, optional enhancements. |
 
 ---
 
@@ -89,7 +98,7 @@ This document lists files that were **created or modified** for the Helpdesk imp
 
 | File | Role |
 |------|------|
-| `Helpdesk Module (1).pdf` | Functional specification (project root). |
+| `modules/helpdesk/Helpdesk Module (1).pdf` | Functional specification (may duplicate at project root). |
 
 ---
 

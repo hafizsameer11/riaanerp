@@ -71,8 +71,10 @@ These are **not blockers** for “module works,” but worth tracking for produc
 | **This handoff guide** | `modules/helpdesk/HELPDESK_MODULE_HANDOFF.md` | Done / gaps / setup / doc index |
 | **Changed files list** | `modules/helpdesk/HELPDESK_CHANGED_FILES.md` | Inventory of touched paths |
 | **POP + SMTP production** | `modules/helpdesk/POP_SMTP_LIVE_SETUP.md` | Live mail, DB, cron, troubleshooting |
-| **Cron commands** | `modules/helpdesk/cron/README_CRON.md` | `pop_sync.php` vs `run_scheduled.php`, Docker wrapper |
-| **Functional spec** | `Helpdesk Module (1).pdf` (project root) | Original requirements |
+| **Linux live cron (POP + scheduler)** | `modules/helpdesk/POP_CRON_LINUX_SERVER.md` | Production `crontab`, PHP 7.4/8.2 split, Docker option |
+| **Cron reference** | `modules/helpdesk/cron/README_CRON.md` | `pop_sync.php` vs `run_scheduled.php`, Docker wrappers |
+| **Spec vs code** | `modules/helpdesk/REQUIREMENTS_TRACEABILITY.md` | PDF §§1–11 mapped to files; gaps, partials, extras |
+| **Functional spec** | `modules/helpdesk/Helpdesk Module (1).pdf` | Original requirements (copy may also exist at project root) |
 | **SQL — fresh DB** | `modules/helpdesk/sql/migrate.sql` | Full Helpdesk tables + seeds |
 | **SQL — admin permissions** | `modules/helpdesk/sql/seed_permissions.sql` | Grant Helpdesk perms to admin role |
 | **SQL — existing DB** | `modules/helpdesk/sql/patch_existing_db_helpdesk_notifications.sql` | Safe incremental updates |
@@ -131,16 +133,14 @@ Reconcile collation if imports fail (e.g. replace `utf8mb4_0900_ai_ci` with `utf
 - **Helpdesk → Mail Settings:** POP + SMTP.
 - **Email Templates** / **Notification Rules:** enable and map events as needed.
 
-### 5.7 Cron (production)
+### 5.7 Cron (production Linux)
 
-Add crontab entries (adjust paths and PHP binaries). Example:
+**Spec:** `pop_sync.php` → **PHP 7.4 + IMAP** only; `run_scheduled.php` and the web app → **PHP 8.2 or 8.3**.
 
-```cron
-* * * * * /usr/bin/php7.4 /path/to/riaanerp/modules/helpdesk/cron/pop_sync.php >> /path/to/riaanerp/modules/helpdesk/cron/logs/pop_cron.out 2>&1
-* * * * * /usr/bin/php8.2 /path/to/riaanerp/modules/helpdesk/cron/run_scheduled.php >> /path/to/riaanerp/modules/helpdesk/cron/logs/scheduled.out 2>&1
-```
+Step-by-step for a **Linux server:** **`modules/helpdesk/POP_CRON_LINUX_SERVER.md`**.  
+Extra detail: **`modules/helpdesk/cron/README_CRON.md`**, **`POP_SMTP_LIVE_SETUP.md`**.
 
-Details: `modules/helpdesk/cron/README_CRON.md` and `POP_SMTP_LIVE_SETUP.md`.
+**Local Windows dev:** run POP manually when needed — **`helpdesk-pop-sync.ps1`** at the project root (Docker), not Task Scheduler.
 
 ### 5.8 Requester portal URL
 

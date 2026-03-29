@@ -16,6 +16,8 @@ if (!hd_can('dashboard')) {
 
 $isAdmin = isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin';
 $uid = (int) $_SESSION['user_id'];
+$canDrilldownAllQueues = hd_can_drilldown_all_queues();
+$hdScopedTech = hd_helpdesk_scoped_to_own_queue();
 hd_refresh_all_overdue($conn);
 
 $techUsers = [];
@@ -43,6 +45,10 @@ $tab = isset($_GET['tab']) ? $_GET['tab'] : 'my';
 if (!in_array($tab, ['my', 'global', 'assets'], true)) {
     $tab = 'my';
 }
+if ($hdScopedTech && $tab !== 'my') {
+    header('Location: index.php?tab=my');
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['save_new_request']) && hd_can('create ticket')) {
@@ -65,11 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             if (hd_can('randomize assignment')) {
-                $pool = hd_randomize_pool_user_ids($conn);
-                if (count($pool) === 0) {
-                    $pool = hd_technician_pool_user_ids($conn);
-                }
+                $pool = hd_random_assignment_pool_user_ids($conn);
                 $assigned_user_id = hd_pick_random_assignee($conn, $pool);
+            }
+            if ($hdScopedTech) {
+                $assigned_user_id = $uid;
             }
             $cidSql = $client_id ? (int) $client_id : 'NULL';
             $aidSql = $assigned_user_id !== null ? (int) $assigned_user_id : 'NULL';
@@ -151,22 +157,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$techStats = [];
-$res = $conn->query("
-    SELECT r.id, r.name, r.surname, r.username,
-        SUM(CASE WHEN t.status = 'open' THEN 1 ELSE 0 END) AS open_cnt,
-        SUM(CASE WHEN t.status = 'on_hold' THEN 1 ELSE 0 END) AS hold_cnt,
-        SUM(CASE WHEN t.is_overdue = 1 AND t.status != 'closed' THEN 1 ELSE 0 END) AS overdue_cnt
-    FROM registers r
-    LEFT JOIN helpdesk_tickets t ON t.assigned_user_id = r.id AND t.merged_into_ticket_id IS NULL
-    WHERE (r.role_id IS NULL OR r.role_id <> 100)
-    GROUP BY r.id, r.name, r.surname, r.username
-    HAVING open_cnt > 0 OR hold_cnt > 0 OR overdue_cnt > 0 OR 1=1
-    ORDER BY r.name, r.surname
-");
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && hd_can('randomize assignment')) {
+    hd_backfill_random_assign_unassigned($conn);
+}
 
-// Re-query simpler for all staff with zero counts still showing in global view
-$res = $conn->query("
+$techStats = [];
+$unRow = null;
+if ($hdScopedTech) {
+    $meRow = $conn->query('
+        SELECT
+            COALESCE(SUM(CASE WHEN status = \'open\' THEN 1 ELSE 0 END), 0) AS open_cnt,
+            COALESCE(SUM(CASE WHEN status = \'on_hold\' THEN 1 ELSE 0 END), 0) AS hold_cnt,
+            COALESCE(SUM(CASE WHEN is_overdue = 1 AND status != \'closed\' THEN 1 ELSE 0 END), 0) AS overdue_cnt
+        FROM helpdesk_tickets
+        WHERE merged_into_ticket_id IS NULL AND assigned_user_id = ' . $uid . '
+    ')->fetch_assoc();
+    $totOpen = (int) ($meRow['open_cnt'] ?? 0);
+    $totHold = (int) ($meRow['hold_cnt'] ?? 0);
+    $totOver = (int) ($meRow['overdue_cnt'] ?? 0);
+} else {
+    $res = $conn->query("
     SELECT r.id, r.name, r.surname, r.username,
         COALESCE(SUM(CASE WHEN t.status = 'open' THEN 1 ELSE 0 END),0) AS open_cnt,
         COALESCE(SUM(CASE WHEN t.status = 'on_hold' THEN 1 ELSE 0 END),0) AS hold_cnt,
@@ -177,11 +187,11 @@ $res = $conn->query("
     GROUP BY r.id, r.name, r.surname, r.username
     ORDER BY open_cnt DESC, r.name
 ");
-while ($row = $res->fetch_assoc()) {
-    $techStats[] = $row;
-}
+    while ($row = $res->fetch_assoc()) {
+        $techStats[] = $row;
+    }
 
-$unRow = $conn->query("
+    $unRow = $conn->query("
     SELECT
         SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open_cnt,
         SUM(CASE WHEN status = 'on_hold' THEN 1 ELSE 0 END) AS hold_cnt,
@@ -189,18 +199,26 @@ $unRow = $conn->query("
     FROM helpdesk_tickets
     WHERE assigned_user_id IS NULL AND merged_into_ticket_id IS NULL
 ")->fetch_assoc();
+}
+
+$techFilterId = (isset($_GET['tech']) && ctype_digit((string) $_GET['tech'])) ? (int) $_GET['tech'] : 0;
+if ($hdScopedTech) {
+    $techFilterId = 0;
+}
 
 $listWhere = ' t.merged_into_ticket_id IS NULL ';
-if ($tab === 'my') {
-    // My View should include my assigned tickets + unassigned queue.
+if ($hdScopedTech) {
+    $listWhere .= ' AND t.assigned_user_id = ' . $uid . ' ';
+} elseif ($tab === 'my') {
     $listWhere .= ' AND (t.assigned_user_id = ' . $uid . ' OR t.assigned_user_id IS NULL) ';
 } elseif ($tab === 'global') {
-    if (!$isAdmin) {
+    $relaxForTechDrilldown = $techFilterId > 0 && $canDrilldownAllQueues;
+    if (!$isAdmin && !$relaxForTechDrilldown) {
         $listWhere .= ' AND (t.assigned_user_id = ' . $uid . ' OR t.assigned_user_id IS NULL) ';
     }
 }
-if (isset($_GET['tech']) && ctype_digit((string) $_GET['tech'])) {
-    $listWhere .= ' AND t.assigned_user_id = ' . (int) $_GET['tech'] . ' ';
+if ($techFilterId > 0) {
+    $listWhere .= ' AND t.assigned_user_id = ' . $techFilterId . ' ';
 }
 // assets tab: different content below
 
@@ -216,19 +234,51 @@ $ticketList = $conn->query("
     LIMIT 200
 ");
 
-$totOpen = 0;
-$totHold = 0;
-$totOver = 0;
-foreach ($techStats as $tr) {
-    $totOpen += (int) $tr['open_cnt'];
-    $totHold += (int) $tr['hold_cnt'];
-    $totOver += (int) $tr['overdue_cnt'];
+if (!$hdScopedTech) {
+    $totOpen = 0;
+    $totHold = 0;
+    $totOver = 0;
+    foreach ($techStats as $tr) {
+        $totOpen += (int) $tr['open_cnt'];
+        $totHold += (int) $tr['hold_cnt'];
+        $totOver += (int) $tr['overdue_cnt'];
+    }
+    if ($unRow) {
+        $totOpen += (int) $unRow['open_cnt'];
+        $totHold += (int) $unRow['hold_cnt'];
+        $totOver += (int) $unRow['overdue_cnt'];
+    }
 }
-if ($unRow) {
-    $totOpen += (int) $unRow['open_cnt'];
-    $totHold += (int) $unRow['hold_cnt'];
-    $totOver += (int) $unRow['overdue_cnt'];
+
+$filterTechStats = null;
+$filterTechLabel = '';
+if ($techFilterId > 0) {
+    foreach ($techStats as $tr) {
+        if ((int) $tr['id'] === $techFilterId) {
+            $filterTechStats = $tr;
+            $filterTechLabel = trim(($tr['name'] ?? '') . ' ' . ($tr['surname'] ?? ''));
+            if ($filterTechLabel === '') {
+                $filterTechLabel = (string) ($tr['username'] ?? '');
+            }
+            break;
+        }
+    }
+    if ($filterTechLabel === '') {
+        $r = $conn->query('SELECT name, surname, username FROM registers WHERE id = ' . $techFilterId . ' LIMIT 1');
+        $rowR = $r ? $r->fetch_assoc() : null;
+        if ($rowR) {
+            $filterTechLabel = trim(($rowR['name'] ?? '') . ' ' . ($rowR['surname'] ?? ''));
+            if ($filterTechLabel === '') {
+                $filterTechLabel = (string) ($rowR['username'] ?? '');
+            }
+        }
+        if ($filterTechLabel === '') {
+            $filterTechLabel = 'User #' . $techFilterId;
+        }
+    }
 }
+$showTechFilterBanner = $techFilterId > 0 && ($canDrilldownAllQueues || $techFilterId === $uid);
+$drilldownTab = $canDrilldownAllQueues ? 'global' : 'my';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -242,57 +292,68 @@ if ($unRow) {
         body { background: #eef3f9; font-family: Inter, Arial, sans-serif; color: #1f2a37; }
         .page-title { font-weight: 700; color: #16324f; margin-bottom: 6px; }
         .page-subtitle { color: #5a6a7f; font-size: 14px; margin-bottom: 14px; }
-        .hd-tab .nav-link { color: #26415f; border-bottom: 3px solid transparent; font-weight: 600; }
-        .hd-tab .nav-link.active { border-bottom-color: #1f6fb2; color: #1f6fb2; font-weight: 700; }
-        .tech-header { background: #1f4f86; color: #fff; }
+        .hd-tab { border-bottom: 2px solid #e2e8f0; gap: .25rem; }
+        .hd-tab .nav-link { color: #64748b; border: 0; border-radius: 8px 8px 0 0; margin-bottom: -2px; font-weight: 600; padding: .65rem 1.1rem; }
+        .hd-tab .nav-link:hover { color: #1e4a72; background: #f8fafc; }
+        .hd-tab .nav-link.active { color: #1f6fb2; border-bottom: 2px solid #1f6fb2; background: #fff; font-weight: 700; }
+        .tech-header { background: linear-gradient(135deg,#1a4d7a 0%,#1f4f86 100%); color: #fff; font-size: .8125rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
         .panel-card { border: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(16,24,40,.08); }
-        .summary-card { border: 0; border-radius: 12px; background: linear-gradient(180deg, #ffffff, #f9fbff); box-shadow: 0 6px 16px rgba(16,24,40,.06); }
-        .summary-label { font-size: 12px; color: #5b6778; text-transform: uppercase; font-weight: 600; }
-        .summary-value { font-size: 24px; font-weight: 800; color: #1e2a38; line-height: 1; }
-        .table td, .table th { vertical-align: middle; }
+        .summary-card { border: 1px solid #e8eef5; border-radius: 12px; background: linear-gradient(180deg, #ffffff, #f9fbff); box-shadow: 0 2px 12px rgba(15,23,42,.04); }
+        .summary-label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: .04em; }
+        .summary-value { font-size: 26px; font-weight: 800; color: #0f2942; line-height: 1; }
         .row-unassigned { background: #e6f1ec !important; }
-        .row-total { background: #d8edf8 !important; }
-        .ticket-card { border: 0; border-radius: 12px; box-shadow: 0 8px 24px rgba(16,24,40,.08); }
+        .row-total { background: #e0f0fa !important; font-weight: 700; }
         .badge-soft { background: #e8f2ff; color: #1b4f88; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
         .modal-header { border-bottom: 1px solid #e7edf5; }
         .modal-footer { border-top: 1px solid #e7edf5; }
     </style>
 </head>
-<body class="p-3">
-<div class="container-fluid">
-    <div class="page-title">Helpdesk Dashboard</div>
-    <div class="page-subtitle">Track open workload, assignments, overdue calls and quick actions in one place.</div>
+<body class="py-4">
+<div class="container-fluid hd-shell">
+    <div class="page-title"><?= $hdScopedTech ? 'My helpdesk queue' : 'Helpdesk Dashboard' ?></div>
+    <div class="page-subtitle"><?= $hdScopedTech ? 'Open calls assigned to you only — team-wide views are available to managers.' : 'Track open workload, assignments, overdue calls and quick actions in one place.' ?></div>
     <div class="row g-2 mb-3">
-        <div class="col-md-3">
+        <div class="<?= $hdScopedTech ? 'col-md-4' : 'col-md-3' ?>">
             <div class="summary-card p-3">
                 <div class="summary-label">Open</div>
                 <div class="summary-value"><?= (int) $totOpen ?></div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="<?= $hdScopedTech ? 'col-md-4' : 'col-md-3' ?>">
             <div class="summary-card p-3">
                 <div class="summary-label">On Hold</div>
                 <div class="summary-value"><?= (int) $totHold ?></div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="<?= $hdScopedTech ? 'col-md-4' : 'col-md-3' ?>">
             <div class="summary-card p-3">
                 <div class="summary-label">Overdue</div>
                 <div class="summary-value"><?= (int) $totOver ?></div>
             </div>
         </div>
+        <?php if (!$hdScopedTech): ?>
         <div class="col-md-3">
             <div class="summary-card p-3">
                 <div class="summary-label">Unassigned Open</div>
                 <div class="summary-value"><?= (int) ($unRow['open_cnt'] ?? 0) ?></div>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
         <?php if (hd_can('create ticket')): ?>
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newRequestModal">New Request</button>
         <?php endif; ?>
+        <?php if ($hdScopedTech && !hd_can('scheduled')): ?>
+        <?php elseif ($hdScopedTech && hd_can('scheduled')): ?>
+            <div class="dropdown">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">Create new</button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="scheduled.php?new=1">Scheduled call</a></li>
+                </ul>
+            </div>
+        <?php else: ?>
         <div class="dropdown">
             <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">Create new</button>
             <ul class="dropdown-menu">
@@ -304,9 +365,18 @@ if ($unRow) {
                 <?php endif; ?>
             </ul>
         </div>
+        <?php endif; ?>
+        <?php if (hd_may_view_tickets_all()): ?>
+            <a class="btn btn-outline-primary" href="<?= hd_esc(hd_helpdesk_module_path('tickets_all.php')) ?>">All tickets</a>
+        <?php endif; ?>
     </div>
     <?php if (isset($_GET['new_req_err'])): ?><div class="alert alert-danger">Requester is required to log a new request.</div><?php endif; ?>
 
+    <?php if ($hdScopedTech): ?>
+    <div class="alert alert-light border py-2 px-3 small text-muted mb-3" role="note">
+        You are in <strong>technician</strong> mode: only tickets assigned to you appear below.
+    </div>
+    <?php else: ?>
     <ul class="nav nav-tabs hd-tab mb-3">
         <li class="nav-item">
             <a class="nav-link <?= $tab === 'my' ? 'active' : '' ?>" href="?tab=my">My View</a>
@@ -318,19 +388,20 @@ if ($unRow) {
             <a class="nav-link <?= $tab === 'assets' ? 'active' : '' ?>" href="?tab=assets">Assets</a>
         </li>
     </ul>
+    <?php endif; ?>
 
     <?php if ($tab !== 'assets'): ?>
-        <div class="panel-card mb-4">
-            <div class="tech-header d-flex justify-content-between align-items-center px-3 py-2">
-                <span>Requests by Technician</span>
+        <?php if (!$hdScopedTech): ?>
+        <div class="hd-table-card mb-4">
+            <div class="tech-header d-flex justify-content-between align-items-center card-header text-white border-0 rounded-0 py-3">
+                <span>Requests by technician</span>
                 <div>
-                    <a class="btn btn-sm btn-outline-light" href="reports/export.php?type=open">View All</a>
-                    <span class="badge bg-light text-dark ms-2">Technician</span>
+                    <a class="btn btn-sm btn-outline-light" href="reports/export.php?type=open">Export open (CSV)</a>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-striped mb-0">
-                    <thead class="table-light">
+            <div class="hd-table-wrap">
+                <table class="table hd-data-table table-striped align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>Technician</th>
                             <th class="text-end">Open</th>
@@ -345,9 +416,11 @@ if ($unRow) {
                             $nm = $tr['username'];
                         }
                         $tid = (int) $tr['id'];
+                        $canLinkTechRow = $canDrilldownAllQueues || $tid === $uid;
+                        $techRowHref = $canLinkTechRow ? hd_helpdesk_module_path('technician.php', ['id' => $tid]) : '';
                         ?>
                         <tr>
-                            <td><a href="index.php?tab=<?= hd_esc($tab) ?>&amp;tech=<?= $tid ?>"><?= hd_esc($nm) ?></a></td>
+                            <td><?php if ($canLinkTechRow): ?><a href="<?= hd_esc($techRowHref) ?>"><?= hd_esc($nm) ?></a><?php else: ?><?= hd_esc($nm) ?><?php endif; ?></td>
                             <td class="text-end fw-semibold"><a href="reports/export.php?type=open&amp;tech=<?= $tid ?>"><?= (int) $tr['open_cnt'] ?></a></td>
                             <td class="text-end fw-semibold"><?= (int) $tr['hold_cnt'] ?></td>
                             <td class="text-end fw-semibold"><a href="reports/export.php?type=overdue&amp;tech=<?= $tid ?>"><?= (int) $tr['overdue_cnt'] ?></a></td>
@@ -371,13 +444,32 @@ if ($unRow) {
                 </table>
             </div>
         </div>
+        <?php endif; ?>
 
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="mb-0">Open tickets</h5>
-            <span class="badge-soft">Live queue</span>
-        </div>
-        <div class="table-responsive bg-white ticket-card">
-            <table class="table table-hover mb-0">
+        <?php if ($showTechFilterBanner): ?>
+            <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3" role="status">
+                <div>
+                    <strong>Technician</strong>
+                    — <?= hd_esc($filterTechLabel) ?>
+                    <?php if ($filterTechStats): ?>
+                        <span class="text-muted ms-1">
+                            (Open: <strong><?= (int) $filterTechStats['open_cnt'] ?></strong>,
+                            On hold: <strong><?= (int) $filterTechStats['hold_cnt'] ?></strong>,
+                            Overdue: <strong><?= (int) $filterTechStats['overdue_cnt'] ?></strong>)
+                        </span>
+                    <?php endif; ?>
+                </div>
+                <a class="btn btn-sm btn-outline-primary" href="<?= hd_esc(hd_helpdesk_index_path(['tab' => $drilldownTab])) ?>">Clear filter</a>
+            </div>
+        <?php endif; ?>
+
+        <div class="hd-table-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="fw-semibold"><?= $hdScopedTech ? 'My open tickets' : 'Open tickets' ?></span>
+                <span class="badge-soft"><?= $hdScopedTech ? 'Your assignments' : 'Live queue' ?></span>
+            </div>
+            <div class="hd-table-wrap">
+            <table class="table hd-data-table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -403,7 +495,14 @@ if ($unRow) {
                         <td><?= hd_esc($t['subject']) ?></td>
                         <td><?= hd_esc($t['client_name'] ?? '') ?></td>
                         <td><?= hd_esc($t['requester_name'] ?? '') ?></td>
-                        <td><?= hd_esc($techLabel) ?></td>
+                        <td><?php
+                            $aid = (int) ($t['assigned_user_id'] ?? 0);
+                            if ($aid > 0 && $techLabel !== '—' && ($canDrilldownAllQueues || $aid === $uid)) {
+                                echo '<a href="' . hd_esc(hd_helpdesk_module_path('technician.php', ['id' => $aid])) . '">' . hd_esc($techLabel) . '</a>';
+                            } else {
+                                echo hd_esc($techLabel);
+                            }
+                        ?></td>
                         <td><?= hd_esc($t['status']) ?></td>
                         <td><?= $t['due_at'] ? hd_esc($t['due_at']) : '—' ?></td>
                         <?php if (hd_can('edit ticket')): ?>
@@ -432,6 +531,7 @@ if ($unRow) {
                 <?php endwhile; ?>
                 </tbody>
             </table>
+            </div>
         </div>
     <?php else: ?>
         <div class="card panel-card">
@@ -474,18 +574,24 @@ if ($unRow) {
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Technician</label>
-                            <select name="assigned_user_id" class="form-select">
-                                <option value="">- Unassigned -</option>
-                                <?php foreach ($techUsers as $u):
-                                    $nm = trim(($u['name'] ?? '') . ' ' . ($u['surname'] ?? ''));
-                                    if ($nm === '') { $nm = (string) ($u['username'] ?? 'User'); }
-                                ?>
-                                    <option value="<?= (int) $u['id'] ?>"><?= hd_esc($nm) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?php if (hd_can('randomize assignment')): ?>
-                                <div class="form-text">Auto-random assignment active for your role.</div>
+                            <?php if ($hdScopedTech): ?>
+                                <label class="form-label">Assignment</label>
+                                <p class="small text-muted border rounded bg-light py-2 px-3 mb-0">New tickets are assigned to <strong>you</strong> automatically.</p>
+                                <input type="hidden" name="assigned_user_id" value="<?= (int) $uid ?>">
+                            <?php else: ?>
+                                <label class="form-label">Technician</label>
+                                <select name="assigned_user_id" class="form-select">
+                                    <option value="">- Unassigned -</option>
+                                    <?php foreach ($techUsers as $u):
+                                        $nm = trim(($u['name'] ?? '') . ' ' . ($u['surname'] ?? ''));
+                                        if ($nm === '') { $nm = (string) ($u['username'] ?? 'User'); }
+                                    ?>
+                                        <option value="<?= (int) $u['id'] ?>"><?= hd_esc($nm) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if (hd_can('randomize assignment')): ?>
+                                    <div class="form-text">Auto-random assignment active for your role.</div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                         <div class="col-md-6">

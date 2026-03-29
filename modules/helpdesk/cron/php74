@@ -1,11 +1,25 @@
 #!/usr/bin/env bash
+# Run PHP 7.4 + IMAP via docker compose (same as docker-compose.yml in this directory).
+# Build: docker compose -f "$(dirname "$0")/docker-compose.yml" build
+# Fallback: set USE_LEGACY_PHP74_DOCKER=1 to use docker run + image php74-imap
 set -euo pipefail
 
-PROJECT_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+COMPOSE_FILE="$PROJECT_ROOT/docker-compose.yml"
 
-docker run --rm \
-  -v "$PROJECT_ROOT:/app" \
-  -w /app \
-  -e DB_HOST_OVERRIDE=host.docker.internal \
-  php74-imap \
-  php "$@"
+if [ "$#" -eq 0 ]; then
+  set -- modules/helpdesk/cron/pop_sync.php
+fi
+
+if [ "${USE_LEGACY_PHP74_DOCKER:-0}" = "1" ]; then
+  docker run --rm \
+    -v "$PROJECT_ROOT:/app" \
+    -w /app \
+    -e DB_HOST_OVERRIDE=host.docker.internal \
+    ${EXTRA_DOCKER_RUN_ARGS:-} \
+    php74-imap \
+    php "$@"
+else
+  docker compose -f "$COMPOSE_FILE" --profile tools run --rm helpdesk-php74 php "$@"
+fi

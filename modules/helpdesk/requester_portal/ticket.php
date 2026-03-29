@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once dirname(__DIR__, 3) . '/config.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
 
 if (!isset($_SESSION['requester_register_id'])) {
     header('Location: login.php');
@@ -32,6 +33,7 @@ $msgs = $conn->query("SELECT * FROM helpdesk_messages WHERE ticket_id = $tid AND
     <style>
         body{background:#eef3f9;font-family:Inter,Arial,sans-serif}
         .msg{border:1px solid #e5ecf5;border-radius:10px;padding:10px;background:#fff;margin-bottom:10px}
+        .thread-html-frame{width:100%;min-height:160px;height:40vh;max-height:480px;border:1px solid #e5ecf5;border-radius:8px;background:#fff}
     </style>
 </head>
 <body class="p-4">
@@ -42,7 +44,7 @@ $msgs = $conn->query("SELECT * FROM helpdesk_messages WHERE ticket_id = $tid AND
     <?php while ($m = $msgs->fetch_assoc()): ?>
         <div class="msg">
             <small><?= htmlspecialchars($m['created_at']) ?></small>
-            <div><?= nl2br(htmlspecialchars($m['body'])) ?></div>
+            <div><?php hd_echo_message_body($m); ?></div>
         </div>
     <?php endwhile; ?>
 </div>

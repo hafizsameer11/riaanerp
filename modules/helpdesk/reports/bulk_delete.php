@@ -51,40 +51,61 @@ $candidates = $conn->query("SELECT id, subject, closed_at FROM helpdesk_tickets 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?= hd_ui_css() ?>
 </head>
-<body class="p-4">
-<div class="container-fluid">
-    <h3 class="hd-page-title mb-1">Bulk delete closed tickets</h3>
-    <p class="hd-page-subtitle">Permanent cleanup tool for very old closed calls and their attachment files.</p>
+<body class="py-4">
+<div class="container-fluid hd-shell">
+    <header class="hd-page-hero mb-3">
+        <h3 class="hd-heading mb-1">Bulk delete closed tickets</h3>
+        <p class="text-muted small mb-0" style="max-width:42rem">Permanent cleanup for very old closed calls. Removes ticket rows, messages, timesheets, service line, and attachment files from disk.</p>
+    </header>
     <?php if ($msg): ?><div class="alert alert-success"><?= hd_esc($msg) ?></div><?php endif; ?>
-    <p class="text-muted">Removes ticket rows, messages, timesheets, service line, and attachment files from disk.</p>
 
-    <h5 class="hd-section-title">By closed date range</h5>
-    <form method="post" class="row g-2 mb-4" onsubmit="return confirm('Permanently delete all closed tickets in this range?');">
-        <input type="hidden" name="confirm" value="1">
-        <div class="col-auto"><input type="date" name="closed_from" class="form-control" required></div>
-        <div class="col-auto"><input type="date" name="closed_to" class="form-control" required></div>
-        <div class="col-auto"><button type="submit" class="btn btn-danger">Delete range</button></div>
-    </form>
-
-    <h5 class="hd-section-title">Or select tickets</h5>
-    <form method="post" onsubmit="return confirm('Delete selected tickets?');">
-        <input type="hidden" name="confirm" value="1">
-        <div class="table-responsive" style="max-height:400px;overflow:auto">
-            <table class="table table-sm bg-white shadow-sm">
-                <?php while ($c = $candidates->fetch_assoc()): ?>
-                    <tr>
-                        <td><input type="checkbox" name="ticket_ids[]" value="<?= (int) $c['id'] ?>"></td>
-                        <td>#<?= (int) $c['id'] ?></td>
-                        <td><?= hd_esc($c['subject']) ?></td>
-                        <td><?= hd_esc($c['closed_at']) ?></td>
-                    </tr>
-                <?php endwhile; ?>
-            </table>
+    <div class="card hd-filter-card hd-card mb-4">
+        <div class="card-header">By closed date range</div>
+        <div class="card-body">
+            <form method="post" class="row g-3 align-items-end" onsubmit="return confirm('Permanently delete all closed tickets in this range?');">
+                <input type="hidden" name="confirm" value="1">
+                <div class="col-auto"><label class="form-label">From</label><input type="date" name="closed_from" class="form-control" required></div>
+                <div class="col-auto"><label class="form-label">To</label><input type="date" name="closed_to" class="form-control" required></div>
+                <div class="col-auto"><button type="submit" class="btn btn-danger fw-semibold">Delete range</button></div>
+            </form>
         </div>
-        <button type="submit" class="btn btn-danger mt-2">Delete selected</button>
-    </form>
+    </div>
 
-    <a href="index.php" class="btn btn-secondary mt-3">Back</a>
+    <div class="card hd-table-card mb-3">
+        <div class="card-header fw-semibold">Or select tickets</div>
+        <div class="card-body p-0">
+            <form method="post" onsubmit="return confirm('Delete selected tickets?');">
+                <input type="hidden" name="confirm" value="1">
+                <div class="hd-table-wrap" style="max-height:400px;overflow:auto">
+                    <table class="table table-striped table-hover table-sm hd-data-table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:2.5rem"></th>
+                                <th>ID</th>
+                                <th>Subject</th>
+                                <th>Closed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php while ($c = $candidates->fetch_assoc()): ?>
+                            <tr>
+                                <td><input type="checkbox" name="ticket_ids[]" value="<?= (int) $c['id'] ?>" class="form-check-input mt-0"></td>
+                                <td>#<?= (int) $c['id'] ?></td>
+                                <td><?= hd_esc($c['subject']) ?></td>
+                                <td><?= hd_esc($c['closed_at']) ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-body border-top py-3">
+                    <button type="submit" class="btn btn-danger fw-semibold">Delete selected</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <a href="index.php" class="btn btn-outline-secondary px-3">Back to reports</a>
 </div>
 </body>
 </html>

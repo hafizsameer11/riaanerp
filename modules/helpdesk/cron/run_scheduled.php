@@ -1,7 +1,7 @@
 <?php
 /**
- * Overdue refresh + scheduled helpdesk jobs. Run via cron (e.g. every 1–5 minutes with pop_sync).
- * php7.4 modules/helpdesk/cron/run_scheduled.php
+ * Overdue refresh + scheduled helpdesk jobs. Run via cron (e.g. every minute with pop_sync).
+ * Use PHP 8.2 or 8.3 CLI: php modules/helpdesk/cron/run_scheduled.php
  */
 $root = dirname(__DIR__, 3);
 require_once $root . '/config.php';

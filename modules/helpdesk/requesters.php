@@ -103,21 +103,23 @@ if (!empty($_GET['edit'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?= hd_ui_css() ?>
 </head>
-<body class="p-4">
-<div class="container-fluid">
-    <h3 class="hd-page-title mb-1">Requesters</h3>
-    <p class="hd-page-subtitle mb-3">Manage requester contacts and self-service portal accounts.</p>
+<body class="py-4">
+<div class="container-fluid hd-shell">
+    <header class="hd-page-hero mb-3">
+        <h3 class="hd-heading mb-1">Requesters</h3>
+        <p class="text-muted small mb-0" style="max-width:36rem">Manage requester contacts and self-service portal accounts.</p>
+    </header>
     <?php if ($err): ?><div class="alert alert-danger"><?= hd_esc($err) ?></div><?php endif; ?>
     <?php if ($flash): ?><div class="alert alert-success"><?= hd_esc($flash) ?></div><?php endif; ?>
 
     <div class="row">
         <div class="col-md-5">
-            <div class="card hd-card">
+            <div class="card hd-filter-card hd-card">
                 <div class="card-header"><?= $edit ? 'Edit' : 'Add' ?> requester</div>
                 <div class="card-body">
                     <form method="post">
                         <input type="hidden" name="id" value="<?= $edit ? (int) $edit['id'] : 0 ?>">
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Client</label>
                             <select name="client_id" class="form-select">
                                 <option value="">—</option>
@@ -126,24 +128,24 @@ if (!empty($_GET['edit'])) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Name</label>
                             <input type="text" name="name" class="form-control" required value="<?= $edit ? hd_esc($edit['name']) : '' ?>">
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Email (login)</label>
                             <input type="email" name="email" class="form-control" required value="<?= $edit ? hd_esc($edit['email']) : '' ?>">
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Work number</label>
                             <input type="text" name="work_number" class="form-control" value="<?= $edit ? hd_esc($edit['work_number'] ?? '') : '' ?>">
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Mobile</label>
                             <input type="text" name="mobile_number" class="form-control" value="<?= $edit ? hd_esc($edit['mobile_number'] ?? '') : '' ?>">
                         </div>
                         <button type="submit" name="save_requester" value="1" class="btn btn-primary">Save</button>
-                        <?php if ($edit): ?><a href="requesters.php" class="btn btn-secondary">Cancel</a><?php endif; ?>
+                        <?php if ($edit): ?><a href="requesters.php" class="btn btn-outline-secondary">Cancel</a><?php endif; ?>
                     </form>
                     <?php if ($edit && $edit['register_id']): ?>
                     <form method="post" class="mt-3" onsubmit="return confirm('Reset password and email login?');">
@@ -155,32 +157,38 @@ if (!empty($_GET['edit'])) {
             </div>
         </div>
         <div class="col-md-7">
-            <div class="hd-toolbar mb-2">
-                <div class="hd-section-title mb-0">Requester list</div>
-                <input type="text" id="rqSearch" class="form-control" style="max-width:260px" placeholder="Search name or email">
+            <div class="card hd-table-card">
+                <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2 py-3">
+                    <span class="fw-semibold">Requester list</span>
+                    <input type="text" id="rqSearch" class="form-control form-control-sm" style="max-width:260px" placeholder="Search name or email">
+                </div>
+                <div class="card-body p-0">
+                    <div class="hd-table-wrap">
+                        <table class="table table-striped table-hover hd-data-table mb-0" id="rqTable">
+                            <thead><tr><th>Name</th><th>Email</th><th>Client</th><th class="text-end">Actions</th></tr></thead>
+                            <tbody>
+                            <?php while ($r = $list->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= hd_esc($r['name']) ?></td>
+                                    <td><?= hd_esc($r['email']) ?></td>
+                                    <td><?= hd_esc($r['client_name'] ?? '') ?></td>
+                                    <td class="text-end text-nowrap">
+                                        <a href="requesters.php?edit=<?= (int) $r['id'] ?>" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Delete?');">
+                                            <input type="hidden" name="delete_id" value="<?= (int) $r['id'] ?>">
+                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <table class="table table-striped bg-white shadow-sm" id="rqTable">
-                <thead><tr><th>Name</th><th>Email</th><th>Client</th><th></th></tr></thead>
-                <tbody>
-                <?php while ($r = $list->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= hd_esc($r['name']) ?></td>
-                        <td><?= hd_esc($r['email']) ?></td>
-                        <td><?= hd_esc($r['client_name'] ?? '') ?></td>
-                        <td>
-                            <a href="requesters.php?edit=<?= (int) $r['id'] ?>" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <form method="post" class="d-inline" onsubmit="return confirm('Delete?');">
-                                <input type="hidden" name="delete_id" value="<?= (int) $r['id'] ?>">
-                                <button class="btn btn-sm btn-outline-danger">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-                </tbody>
-            </table>
         </div>
     </div>
-    <a href="index.php" class="btn btn-secondary mt-3">Back</a>
+    <a href="index.php" class="btn btn-outline-secondary px-3 mt-3">Back to dashboard</a>
 </div>
 <script>
 document.getElementById('rqSearch')?.addEventListener('input', function () {

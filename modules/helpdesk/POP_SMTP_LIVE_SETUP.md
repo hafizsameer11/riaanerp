@@ -86,7 +86,13 @@ Recommended defaults:
 
 ## 6) Cron jobs (every minute)
 
-Set cron with runtime split:
+**Spec / architecture:** PHP **8.2 or 8.3** for the web app and for `run_scheduled.php`. **Only** `pop_sync.php` must run on **PHP 7.4 + IMAP** (native binary or **Docker** — see below).
+
+**Linux production:** copy-paste guide — **`modules/helpdesk/POP_CRON_LINUX_SERVER.md`**.  
+More variants (Docker POP, `host-gateway`, etc.): **`modules/helpdesk/cron/README_CRON.md`**.  
+**Local Windows:** run POP manually — **`helpdesk-pop-sync.ps1`** / **`helpdesk-pop-sync.cmd`** (no Task Scheduler in repo).
+
+Minimal native split (when `php7.4` exists on the server):
 
 ```cron
 # IMAP POP parser -> PHP 7.4 only
@@ -98,36 +104,58 @@ Set cron with runtime split:
 
 Important:
 - Use full absolute paths
-- Use PHP **7.4** only for `pop_sync.php`
-- Use PHP **8.2/8.3** for `run_scheduled.php` and web runtime
-- Ensure `modules/helpdesk/cron/logs/` is writable by cron user
+- Use PHP **7.4** only for `pop_sync.php` (or the **php74-imap** Docker image running that script)
+- Use PHP **8.2/8.3** for `run_scheduled.php` and the web runtime
+- Ensure `modules/helpdesk/cron/logs/` is writable by the cron user
 
-## 7) Docker option (recommended for local Mac)
+**Docker POP line (copy/paste):** replace `/ABS/PATH/riaanerp` and add `--add-host=host.docker.internal:host-gateway` on Linux Docker Engine if needed:
 
-If your local machine does not have PHP 7.4 installed, use Docker only for the IMAP parser:
+```cron
+* * * * * docker run --rm -v /ABS/PATH/riaanerp:/app -w /app -e DB_HOST_OVERRIDE=host.docker.internal php74-imap php modules/helpdesk/cron/pop_sync.php >> /ABS/PATH/riaanerp/modules/helpdesk/cron/logs/pop_cron.out 2>&1
+```
 
-1. Build the image once:
+## 7) Full stack in Docker (MySQL + PHP 8.2 + POP tools)
+
+If XAMPP MySQL is unreliable, use the root **`docker-compose.yml`**: MySQL with large import limits and PHP 8.2 Apache. See **`docker/README.md`**.
+
+POP sync uses **`docker compose --profile tools run --rm helpdesk-php74`** (same file). **`modules/helpdesk/cron/README_CRON.md`** has crontab lines.
+
+---
+
+## 8) Docker for POP only (recommended: local dev, or servers without PHP 7.4)
+
+Use Docker **only** for `pop_sync.php`. Keep **PHP 8.2/8.3** for Apache/nginx and for `run_scheduled.php`.
+
+1. Build the image once (from project root):
 
 ```bash
-cd /Users/macbookpro/riaanerp
+cd /path/to/riaanerp
 docker build -t php74-imap -f modules/helpdesk/cron/Dockerfile.php74-imap .
 ```
 
-2. Run pop parser with Dockerized 7.4:
+2. Test POP sync:
 
 ```bash
 ./modules/helpdesk/cron/php74 modules/helpdesk/cron/pop_sync.php
 ```
 
-3. Run scheduler with your local PHP 8.2/8.3:
+**Windows (PowerShell):**
+
+```powershell
+.\modules\helpdesk\cron\docker-php74.ps1
+```
+
+3. Test scheduler on the host (PHP 8.2/8.3):
 
 ```bash
 php modules/helpdesk/cron/run_scheduled.php
 ```
 
-This keeps your main local/runtime PHP on 8.2/8.3 while honoring the IMAP-on-7.4 constraint.
+4. Install **crontab** entries from **`README_CRON.md`** (Docker or native), or on Windows use **Task Scheduler** as documented there.
 
-## 8) POP behavior notes
+MySQL on the host (XAMPP, local MariaDB, Docker Desktop): the wrappers set `DB_HOST_OVERRIDE=host.docker.internal` so the container can reach the database. On Linux Docker Engine, use `--add-host=host.docker.internal:host-gateway` (see `README_CRON.md`).
+
+## 9) POP behavior notes
 
 - POP worker imports all messages it finds
 - If email is a reply (`In-Reply-To` / `References` match), it appends to existing ticket
@@ -137,7 +165,7 @@ This keeps your main local/runtime PHP on 8.2/8.3 while honoring the IMAP-on-7.4
 - Attachments are saved to `modules/helpdesk/uploads/`
 - Imported POP messages are deleted from mailbox after successful processing
 
-## 9) Live verification checklist
+## 10) Live verification checklist
 
 1. Create manual ticket -> confirm visible in dashboard
 2. Send test email to POP mailbox -> new ticket appears within 1 min
@@ -149,7 +177,7 @@ This keeps your main local/runtime PHP on 8.2/8.3 while honoring the IMAP-on-7.4
 8. Reports export (Open/Closed/On Hold/Overdue) works
 9. Bulk delete closed tickets removes DB rows and attachment files
 
-## 10) Troubleshooting
+## 11) Troubleshooting
 
 - No incoming tickets:
   - Check cron output logs (`pop_cron.out`)
@@ -161,7 +189,7 @@ This keeps your main local/runtime PHP on 8.2/8.3 while honoring the IMAP-on-7.4
 - Permissions issue:
   - Ensure role has `helpdesk` permissions in `Reporting and Admin -> Role Permissions`
 
-## 11) Security recommendations
+## 12) Security recommendations
 
 - Use app passwords for POP/SMTP where possible
 - Restrict file permissions on project directory

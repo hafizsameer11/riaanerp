@@ -358,6 +358,13 @@ if (isset($_GET['logout']) && $_GET['logout'] == 1) {
             <?php if (hasPermission('helpdesk', 'reports')): ?>
               <a href="#" data-src="modules/helpdesk/reports/index.php" class="sub-tabbtn w-100">Reports</a>
             <?php endif; ?>
+            <?php
+            $hdAllTicketsNav = (isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin')
+              || (!empty($_SESSION['permissions']['helpdesk']) && in_array('edit ticket', $_SESSION['permissions']['helpdesk'], true));
+            ?>
+            <?php if ($hdAllTicketsNav): ?>
+              <a href="#" data-src="modules/helpdesk/tickets_all.php" class="sub-tabbtn w-100">All tickets</a>
+            <?php endif; ?>
           </div>
         <?php endif; ?>
 

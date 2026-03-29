@@ -121,23 +121,25 @@ if ($editJob && hd_table_exists($conn, 'helpdesk_scheduled_attachments')) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?= hd_ui_css() ?>
 </head>
-<body class="p-4" style="background:#f6f8fb;">
-<div class="container-fluid">
-    <h3 class="hd-page-title mb-1">Scheduled calls</h3>
-    <p class="hd-page-subtitle mb-3">Create recurring tickets and control when they are logged automatically.</p>
+<body class="py-4">
+<div class="container-fluid hd-shell">
+    <header class="hd-page-hero mb-3">
+        <h3 class="hd-heading mb-1">Scheduled calls</h3>
+        <p class="text-muted small mb-0" style="max-width:36rem">Create recurring tickets and control when they are logged automatically.</p>
+    </header>
     <?php if ($err): ?><div class="alert alert-danger"><?= hd_esc($err) ?></div><?php endif; ?>
     <?php if ($flash): ?><div class="alert alert-success"><?= hd_esc($flash) ?></div><?php endif; ?>
 
     <div class="row">
         <div class="col-md-5">
-            <div class="card mb-4 shadow-sm border-0">
-                <div class="card-header bg-white fw-semibold"><?= $editJob ? 'Edit scheduled call #' . (int) $editJob['id'] : 'Add scheduled call' ?></div>
+            <div class="card hd-filter-card hd-card mb-4">
+                <div class="card-header"><?= $editJob ? 'Edit scheduled call #' . (int) $editJob['id'] : 'Add scheduled call' ?></div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         <?php if ($editJob): ?>
                             <input type="hidden" name="job_id" value="<?= (int) $editJob['id'] ?>">
                         <?php endif; ?>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Client</label>
                             <select name="client_id" class="form-select">
                                 <option value="">—</option>
@@ -146,7 +148,7 @@ if ($editJob && hd_table_exists($conn, 'helpdesk_scheduled_attachments')) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Requester</label>
                             <select name="requester_id" class="form-select" required>
                                 <option value="">—</option>
@@ -155,7 +157,7 @@ if ($editJob && hd_table_exists($conn, 'helpdesk_scheduled_attachments')) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Technician</label>
                             <select name="assigned_user_id" class="form-select">
                                 <option value="">—</option>
@@ -166,22 +168,22 @@ if ($editJob && hd_table_exists($conn, 'helpdesk_scheduled_attachments')) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Subject</label>
                             <input type="text" name="subject" class="form-control" required value="<?= hd_esc($editJob['subject'] ?? '') ?>">
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Description</label>
                             <textarea name="description" class="form-control" rows="3"><?= hd_esc($editJob['description'] ?? '') ?></textarea>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">File / image upload</label>
                             <input type="file" name="attachments[]" class="form-control" multiple>
                             <?php if ($editJob && count($schedAttachments) > 0): ?>
                                 <div class="small text-muted mt-1">Saved attachments: <?= (int) count($schedAttachments) ?></div>
                             <?php endif; ?>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Schedule</label>
                             <select name="schedule_type" class="form-select">
                                 <?php $st = $editJob['schedule_type'] ?? 'once'; ?>
@@ -192,11 +194,11 @@ if ($editJob && hd_table_exists($conn, 'helpdesk_scheduled_attachments')) {
                                 <option value="periodic" <?= $st === 'periodic' ? 'selected' : '' ?>>Periodic (days)</option>
                             </select>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Interval days (periodic)</label>
                             <input type="number" name="schedule_interval_days" class="form-control" value="<?= (int) ($editJob['schedule_interval_days'] ?? 1) ?>" min="1">
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="form-label">Next run</label>
                             <?php $nrv = $editJob ? substr(str_replace(' ', 'T', (string) $editJob['next_run_at']), 0, 16) : str_replace(' ', 'T', date('Y-m-d H:i')); ?>
                             <input type="datetime-local" name="next_run_at" class="form-control" value="<?= hd_esc($nrv) ?>">
@@ -208,43 +210,50 @@ if ($editJob && hd_table_exists($conn, 'helpdesk_scheduled_attachments')) {
             </div>
         </div>
         <div class="col-md-7">
-            <table class="table table-striped bg-white shadow-sm">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Subject</th>
-                        <th>Requester</th>
-                        <th>Created</th>
-                        <th>Next run</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php while ($j = $jobs->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= (int) $j['id'] ?></td>
-                        <td><?= hd_esc($j['subject']) ?></td>
-                        <td><?= hd_esc($j['requester_name'] ?? '') ?></td>
-                        <td><?= hd_esc($j['created_at']) ?></td>
-                        <td><?= hd_esc($j['next_run_at']) ?></td>
-                        <td>
-                            <a href="scheduled.php?edit=<?= (int) $j['id'] ?>" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <form method="post" class="d-inline">
-                                <input type="hidden" name="log_again" value="<?= (int) $j['id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-success">Log again</button>
-                            </form>
-                            <form method="post" class="d-inline" onsubmit="return confirm('Delete job?');">
-                                <input type="hidden" name="delete_job" value="<?= (int) $j['id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-                </tbody>
-            </table>
+            <div class="card hd-table-card">
+                <div class="card-header fw-semibold">Scheduled jobs</div>
+                <div class="card-body p-0">
+                    <div class="hd-table-wrap">
+                        <table class="table table-striped table-hover hd-data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Subject</th>
+                                    <th>Requester</th>
+                                    <th>Created</th>
+                                    <th>Next run</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php while ($j = $jobs->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= (int) $j['id'] ?></td>
+                                    <td><?= hd_esc($j['subject']) ?></td>
+                                    <td><?= hd_esc($j['requester_name'] ?? '') ?></td>
+                                    <td><?= hd_esc($j['created_at']) ?></td>
+                                    <td><?= hd_esc($j['next_run_at']) ?></td>
+                                    <td class="text-end text-nowrap">
+                                        <a href="scheduled.php?edit=<?= (int) $j['id'] ?>" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <form method="post" class="d-inline">
+                                            <input type="hidden" name="log_again" value="<?= (int) $j['id'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Log again</button>
+                                        </form>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('Delete job?');">
+                                            <input type="hidden" name="delete_job" value="<?= (int) $j['id'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <a href="index.php" class="btn btn-secondary">Back</a>
+    <a href="index.php" class="btn btn-outline-secondary px-3 mt-3">Back to dashboard</a>
 </div>
 </body>
 </html>

@@ -54,9 +54,187 @@ function hd_require($function_name)
     }
 }
 
+/**
+ * Field technicians: no admin, no helpdesk "edit ticket" — own assigned tickets only (no org-wide queues).
+ * Managers keep "edit ticket" and see team/global views.
+ */
+function hd_helpdesk_scoped_to_own_queue()
+{
+    if (isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin') {
+        return false;
+    }
+    return !hd_can('edit ticket');
+}
+
+/**
+ * Staff may open ticket: admin, has edit ticket (full queue), or ticket assigned to self.
+ * Unassigned tickets are visible only to admin / users with edit ticket.
+ *
+ * @param mixed $assignedUserId helpdesk_tickets.assigned_user_id (null = unassigned)
+ */
+function hd_may_view_ticket_as_staff($assignedUserId)
+{
+    $uid = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+    $isAdmin = isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin';
+    if ($isAdmin) {
+        return true;
+    }
+    if (hd_can('edit ticket')) {
+        return true;
+    }
+    $aid = $assignedUserId;
+    if ($aid !== null && $aid !== '') {
+        return (int) $aid === $uid;
+    }
+    return false;
+}
+
 function hd_esc($s)
 {
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Root-relative URL to helpdesk dashboard (stable inside the ERP iframe).
+ *
+ * @param array<string, scalar> $query
+ */
+function hd_helpdesk_index_path(array $query = [])
+{
+    $script = isset($_SERVER['SCRIPT_NAME']) ? (string) $_SERVER['SCRIPT_NAME'] : '';
+    $script = str_replace('\\', '/', $script);
+    $dir = dirname($script !== '' ? $script : '/modules/helpdesk/index.php');
+    if ($dir === '.' || $dir === '/') {
+        $path = '/index.php';
+    } else {
+        $path = $dir . '/index.php';
+    }
+    if ($path[0] !== '/') {
+        $path = '/' . $path;
+    }
+    if ($query !== []) {
+        $path .= '?' . http_build_query($query);
+    }
+    return $path;
+}
+
+/**
+ * Root-relative URL to a script in the helpdesk module directory (iframe-safe).
+ *
+ * @param array<string, scalar> $query
+ */
+function hd_helpdesk_module_path($filename, array $query = [])
+{
+    $filename = basename((string) $filename);
+    $script = isset($_SERVER['SCRIPT_NAME']) ? (string) $_SERVER['SCRIPT_NAME'] : '';
+    $script = str_replace('\\', '/', $script);
+    $dir = dirname($script !== '' ? $script : '/modules/helpdesk/index.php');
+    if ($dir === '.' || $dir === '/') {
+        $path = '/' . $filename;
+    } else {
+        $path = $dir . '/' . $filename;
+    }
+    if ($path[0] !== '/') {
+        $path = '/' . $path;
+    }
+    if ($query !== []) {
+        $path .= '?' . http_build_query($query);
+    }
+    return $path;
+}
+
+/**
+ * Use sandboxed HTML render for POP/outbound stored HTML; internal notes stay plain.
+ */
+function hd_message_body_use_html_render(array $m)
+{
+    if (($m['direction'] ?? '') === 'internal') {
+        return false;
+    }
+    if (strlen(trim((string) ($m['body_html'] ?? ''))) > 0) {
+        return true;
+    }
+    $b = trim((string) ($m['body'] ?? ''));
+    if ($b === '') {
+        return false;
+    }
+    return (bool) preg_match('/<\s*(!DOCTYPE|html|head|body|div|table|p\b|span\b|br\b|a\b|ul\b|ol\b)/i', $b);
+}
+
+/**
+ * Strip risky bits from inbound email HTML before srcdoc iframe.
+ */
+function hd_sanitize_thread_html($html)
+{
+    $html = (string) $html;
+    $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+    $html = preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $html);
+    $html = preg_replace('/<\/?(?:iframe|object|embed|form|input|meta|link|base)\b[^>]*>/i', '', $html);
+    $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
+    $html = preg_replace('/\sjavascript\s*:/i', '', $html);
+    return $html;
+}
+
+/**
+ * Output message body: HTML (sandbox iframe) or escaped plain text.
+ */
+function hd_echo_message_body(array $m)
+{
+    if (hd_message_body_use_html_render($m)) {
+        $html = strlen(trim((string) ($m['body_html'] ?? ''))) > 0
+            ? (string) $m['body_html']
+            : (string) ($m['body'] ?? '');
+        $html = hd_sanitize_thread_html($html);
+        if (trim($html) === '') {
+            echo '<div class="text-muted small">(empty)</div>';
+            return;
+        }
+        $escaped = htmlspecialchars($html, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        echo '<iframe class="thread-html-frame" sandbox="" referrerpolicy="no-referrer" title="Message content" srcdoc="' . $escaped . '"></iframe>';
+        return;
+    }
+    $plain = (string) ($m['body'] ?? '');
+    echo '<div class="thread-plain">' . nl2br(hd_esc($plain)) . '</div>';
+}
+
+/**
+ * Managers: literal admin role or helpdesk edit ticket. Used for technician profile + all-tickets browser.
+ */
+function hd_can_drilldown_all_queues()
+{
+    $isAdmin = isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin';
+    return $isAdmin || hd_can('edit ticket');
+}
+
+/**
+ * May open technician.php for this registers id (staff only, not requester role 100).
+ */
+function hd_may_view_technician_profile($conn, $targetUserId)
+{
+    $tid = (int) $targetUserId;
+    if ($tid < 1) {
+        return false;
+    }
+    $row = $conn->query('SELECT role_id FROM registers WHERE id = ' . $tid . ' LIMIT 1')->fetch_assoc();
+    if (!$row) {
+        return false;
+    }
+    if ((int) $row['role_id'] === 100) {
+        return false;
+    }
+    if (hd_can_drilldown_all_queues()) {
+        return true;
+    }
+    $uid = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+    return $tid === $uid && hd_can('dashboard');
+}
+
+/**
+ * May open tickets_all.php (browse all tickets).
+ */
+function hd_may_view_tickets_all()
+{
+    return hd_can_drilldown_all_queues();
 }
 
 /**
@@ -259,6 +437,57 @@ function hd_technician_pool_user_ids($conn)
         $out[] = (int) $row['id'];
     }
     return $out;
+}
+
+/**
+ * Same pool as manual ticket create when randomize is on: randomize roles, else all technicians.
+ *
+ * @return int[]
+ */
+function hd_random_assignment_pool_user_ids($conn)
+{
+    $pool = hd_randomize_pool_user_ids($conn);
+    if (count($pool) === 0) {
+        $pool = hd_technician_pool_user_ids($conn);
+    }
+    return $pool;
+}
+
+/**
+ * Assign open/on-hold tickets that still have no technician, using load-balanced picks.
+ * Call when a user with "randomize assignment" loads the dashboard so older rows catch up.
+ *
+ * @param mysqli $conn
+ * @param int $maxTickets safety cap per request
+ * @return int number of tickets updated
+ */
+function hd_backfill_random_assign_unassigned($conn, $maxTickets = 500)
+{
+    $pool = hd_random_assignment_pool_user_ids($conn);
+    if (count($pool) === 0) {
+        return 0;
+    }
+    $maxTickets = max(1, (int) $maxTickets);
+    $res = $conn->query(
+        "SELECT id FROM helpdesk_tickets WHERE assigned_user_id IS NULL AND merged_into_ticket_id IS NULL AND status IN ('open','on_hold') ORDER BY id ASC LIMIT {$maxTickets}"
+    );
+    if (!$res) {
+        return 0;
+    }
+    $n = 0;
+    while ($row = $res->fetch_assoc()) {
+        $tid = (int) $row['id'];
+        $pick = hd_pick_random_assignee($conn, $pool);
+        if ($pick === null) {
+            break;
+        }
+        $aid = (int) $pick;
+        $conn->query("UPDATE helpdesk_tickets SET assigned_user_id = {$aid}, random_assigned = 1 WHERE id = {$tid} AND assigned_user_id IS NULL");
+        if ($conn->affected_rows > 0) {
+            $n++;
+        }
+    }
+    return $n;
 }
 
 /**
@@ -467,11 +696,11 @@ function hd_copy_scheduled_attachments_to_ticket($conn, $scheduledJobId, $ticket
 function hd_ui_css()
 {
     return '<style>
-        body{background:#eef3f9;font-family:Inter,Arial,sans-serif;color:#1f2a37}
+        body{background:#eef3f9;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1f2a37}
         .hd-page-title{font-size:28px;font-weight:800;color:#153450;margin:0}
         .hd-page-subtitle{color:#60748a;margin-top:4px}
         .hd-card{border:0;border-radius:12px;box-shadow:0 8px 24px rgba(16,24,40,.08)}
-        .hd-card .card-header{background:#fff;border-bottom:1px solid #e8eef5;font-weight:700}
+        .hd-card .card-header{background:linear-gradient(180deg,#fff,#f8fafc);border-bottom:1px solid #e8eef5;font-weight:600;font-size:.8125rem;text-transform:uppercase;letter-spacing:.04em;color:#475569;padding:.75rem 1.25rem}
         .hd-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
         .hd-badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
         .hd-badge-open{background:#e7f4ff;color:#14508f}
@@ -479,8 +708,35 @@ function hd_ui_css()
         .hd-badge-closed{background:#e7f8ef;color:#166534}
         .hd-badge-overdue{background:#fee2e2;color:#b91c1c}
         .hd-section-title{font-size:18px;font-weight:700;color:#153450}
-        .table thead th{background:#f8fbff;color:#2a3f56;font-weight:700}
         .btn-primary{font-weight:600}
+        .hd-shell{max-width:1440px;margin-left:auto;margin-right:auto;padding-left:1rem;padding-right:1rem}
+        .hd-shell.hd-shell-narrow{max-width:36rem}
+        .hd-shell.hd-shell-medium{max-width:54rem}
+        @media (min-width:1200px){.hd-shell{padding-left:1.5rem;padding-right:1.5rem}}
+        .hd-page-hero{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid #dce4ee}
+        .hd-page-hero .hd-heading{font-size:1.5rem;font-weight:700;color:#0f2942;letter-spacing:-.02em}
+        .hd-filter-card{border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 2px 12px rgba(15,23,42,.04);overflow:hidden}
+        .hd-filter-card .card-body{padding:1.25rem 1.35rem}
+        .hd-filter-card .form-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:#64748b;margin-bottom:.35rem}
+        .hd-table-card{border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 4px 20px rgba(15,23,42,.06);overflow:hidden;background:#fff}
+        .hd-table-card .card-header{padding:.85rem 1.25rem}
+        .hd-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .hd-results-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem;padding:.85rem 1.15rem;background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:.85rem}
+        .hd-data-table{width:100%;margin-bottom:0;font-size:.875rem;--bs-table-border-color:#eef2f7;border-color:#eef2f7}
+        .hd-data-table thead th{color:#475569;font-weight:600;font-size:.6875rem;text-transform:uppercase;letter-spacing:.045em;padding:.9rem 1.1rem;background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border-bottom:2px solid #e2e8f0;white-space:nowrap;vertical-align:middle}
+        .hd-data-table tbody td{padding:.9rem 1.1rem;border-bottom:1px solid #eef2f7;vertical-align:middle;line-height:1.45;color:#334155}
+        .hd-data-table tbody tr:last-child td{border-bottom:none}
+        .hd-data-table.table-striped>tbody>tr:nth-of-type(odd)>*{background-color:#fafbfd}
+        .hd-data-table.table-hover>tbody>tr:hover>*{background-color:#f0f9ff!important}
+        .hd-data-table .btn-sm{padding:.35rem .75rem;font-size:.8125rem;border-radius:8px;font-weight:600}
+        .hd-data-table.table-sm thead th{padding:.55rem .85rem;font-size:.65rem}
+        .hd-data-table.table-sm tbody td{padding:.55rem .85rem;font-size:.8125rem}
+        .hd-nav-tabs{border-bottom:2px solid #e2e8f0;gap:.25rem}
+        .hd-nav-tabs .nav-link{border:0;border-radius:8px 8px 0 0;margin-bottom:-2px;color:#64748b;font-weight:600;padding:.65rem 1.15rem;font-size:.9rem}
+        .hd-nav-tabs .nav-link:hover{color:#1e4a72;background:#f8fafc}
+        .hd-nav-tabs .nav-link.active{color:#1f6fb2;border-bottom:2px solid #1f6fb2;background:#fff}
+        .table:not(.hd-data-table) thead th{background:#f8fafc;color:#334155;font-weight:600;font-size:.8rem;padding:.75rem 1rem}
+        .table:not(.hd-data-table) tbody td{padding:.75rem 1rem}
     </style>';
 }
 

@@ -13,19 +13,18 @@ while ($t = $techs->fetch_assoc()) {
     <meta charset="UTF-8">
     <title>Helpdesk reports</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        <?= str_replace('</style>', '', str_replace('<style>', '', hd_ui_css())) ?>
-        body { background: #f5f7fb; }
-        .hd-card { border: 0; border-radius: 12px; box-shadow: 0 8px 24px rgba(16,24,40,.08); }
-    </style>
+    <?= hd_ui_css() ?>
 </head>
-<body class="p-4">
-<div class="container">
-    <h3 class="hd-page-title mb-1">Helpdesk reports</h3>
-    <p class="hd-page-subtitle mb-3">Export open, closed, on-hold and overdue calls with optional date range and technician filters.</p>
-    <div class="card hd-card mb-4">
+<body class="py-4">
+<div class="container-fluid hd-shell">
+    <header class="hd-page-hero mb-3">
+        <h3 class="hd-heading mb-1">Helpdesk reports</h3>
+        <p class="text-muted small mb-0" style="max-width:40rem">Export open, closed, on-hold and overdue calls with optional date range and technician filters.</p>
+    </header>
+    <div class="card hd-filter-card hd-card mb-4">
+        <div class="card-header">Export filters</div>
         <div class="card-body">
-            <div class="row g-2 align-items-end">
+            <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label">Date from</label>
                     <input type="date" class="form-control" id="dateFrom">
@@ -47,7 +46,7 @@ while ($t = $techs->fetch_assoc()) {
                     </select>
                 </div>
             </div>
-            <div class="d-flex flex-wrap gap-2 mt-3">
+            <div class="d-flex flex-wrap gap-2 mt-2 pt-2 border-top">
                 <button class="btn btn-outline-primary" onclick="goExport('open')">Open calls CSV</button>
                 <button class="btn btn-outline-primary" onclick="goExport('closed')">Closed calls CSV</button>
                 <button class="btn btn-outline-primary" onclick="goExport('on_hold')">On-hold calls CSV</button>
@@ -59,7 +58,7 @@ while ($t = $techs->fetch_assoc()) {
             </div>
         </div>
     </div>
-    <a href="../index.php" class="btn btn-secondary">Back</a>
+    <a href="../index.php" class="btn btn-outline-secondary px-3">Back to dashboard</a>
 </div>
 <script>
 function goExport(type) {

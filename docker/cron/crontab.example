@@ -1,0 +1,13 @@
+# Linux server: Helpdesk POP + run_scheduled (every minute).
+# Full guide: modules/helpdesk/POP_CRON_LINUX_SERVER.md
+#
+# crontab -e  (replace /ABS/PATH/riaanerp)
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+* * * * * /usr/bin/php7.4 /ABS/PATH/riaanerp/modules/helpdesk/cron/pop_sync.php >> /ABS/PATH/riaanerp/modules/helpdesk/cron/logs/pop_cron.out 2>&1
+
+* * * * * /usr/bin/php8.2 /ABS/PATH/riaanerp/modules/helpdesk/cron/run_scheduled.php >> /ABS/PATH/riaanerp/modules/helpdesk/cron/logs/scheduled_cron.out 2>&1
+
+# Docker POP variant (if you use compose on the server): see POP_CRON_LINUX_SERVER.md

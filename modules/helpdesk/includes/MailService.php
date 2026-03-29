@@ -120,7 +120,7 @@ class HelpdeskMailService
             $uid = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
             $ir = $inReplyToMsgId ?: '';
             $ref = $referencesChain ?: '';
-            $stmt->bind_param('issssssi', $ticketId, $plain, $htmlBody, $newId, $ir, $ref, $uid);
+            $stmt->bind_param('isssssi', $ticketId, $plain, $htmlBody, $newId, $ir, $ref, $uid);
             $stmt->execute();
             $stmt->close();
 

@@ -34,52 +34,64 @@ $rows = $conn->query($sql);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?= hd_ui_css() ?>
 </head>
-<body class="p-4">
-<div class="container-fluid">
-    <h3 class="hd-page-title mb-1">Billing report</h3>
-    <p class="hd-page-subtitle">Closed tickets with time spent, worklog summary and service pricing.</p>
-    <form class="row g-2 mb-3" method="get">
-        <div class="col-auto"><input type="date" name="date_from" class="form-control" value="<?= hd_esc($d1) ?>"></div>
-        <div class="col-auto"><input type="date" name="date_to" class="form-control" value="<?= hd_esc($d2) ?>"></div>
-        <div class="col-auto"><button class="btn btn-primary">Filter</button></div>
-    </form>
-    <div class="table-responsive">
-        <table class="table table-sm table-striped bg-white shadow-sm">
-            <thead>
-                <tr>
-                    <th>Helpdesk ID</th>
-                    <th>Client</th>
-                    <th>Time (min)</th>
-                    <th>Created</th>
-                    <th>Closed</th>
-                    <th>Technician</th>
-                    <th>Subject</th>
-                    <th>Worklog</th>
-                    <th>Service</th>
-                    <th>Unit price</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php while ($r = $rows->fetch_assoc()):
-                $tech = trim(($r['tech_fn'] ?? '') . ' ' . ($r['tech_sn'] ?? ''));
-                ?>
-                <tr>
-                    <td><?= (int) $r['id'] ?></td>
-                    <td><?= hd_esc($r['client_name']) ?></td>
-                    <td><?= (int) ($r['minutes_spent'] ?? 0) ?></td>
-                    <td><?= hd_esc($r['created_at']) ?></td>
-                    <td><?= hd_esc($r['closed_at']) ?></td>
-                    <td><?= hd_esc($tech) ?></td>
-                    <td><?= hd_esc($r['subject']) ?></td>
-                    <td><?= hd_esc(substr($r['worklog_bits'] ?? '', 0, 120)) ?></td>
-                    <td><?= hd_esc($r['item_name'] ?? '') ?></td>
-                    <td><?= hd_esc(($r['unit_price'] ?? '') . ' ' . ($r['currency'] ?? '')) ?></td>
-                </tr>
-            <?php endwhile; ?>
-            </tbody>
-        </table>
+<body class="py-4">
+<div class="container-fluid hd-shell">
+    <header class="hd-page-hero mb-3">
+        <h3 class="hd-heading mb-1">Billing report</h3>
+        <p class="text-muted small mb-0" style="max-width:40rem">Closed tickets with time spent, worklog summary and service pricing.</p>
+    </header>
+    <div class="card hd-filter-card hd-card mb-3">
+        <div class="card-header">Date range</div>
+        <div class="card-body">
+            <form class="row g-3 align-items-end" method="get">
+                <div class="col-auto"><label class="form-label">From</label><input type="date" name="date_from" class="form-control" value="<?= hd_esc($d1) ?>"></div>
+                <div class="col-auto"><label class="form-label">To</label><input type="date" name="date_to" class="form-control" value="<?= hd_esc($d2) ?>"></div>
+                <div class="col-auto"><button class="btn btn-primary fw-semibold px-3">Filter</button></div>
+            </form>
+        </div>
     </div>
-    <a href="index.php" class="btn btn-secondary">Back</a>
+    <div class="card hd-table-card">
+        <div class="card-header fw-semibold">Results</div>
+        <div class="card-body p-0">
+            <div class="hd-table-wrap">
+                <table class="table table-sm table-striped table-hover hd-data-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Helpdesk ID</th>
+                            <th>Client</th>
+                            <th>Time (min)</th>
+                            <th>Created</th>
+                            <th>Closed</th>
+                            <th>Technician</th>
+                            <th>Subject</th>
+                            <th>Worklog</th>
+                            <th>Service</th>
+                            <th>Unit price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php while ($r = $rows->fetch_assoc()):
+                        $tech = trim(($r['tech_fn'] ?? '') . ' ' . ($r['tech_sn'] ?? ''));
+                        ?>
+                        <tr>
+                            <td><?= (int) $r['id'] ?></td>
+                            <td><?= hd_esc($r['client_name']) ?></td>
+                            <td><?= (int) ($r['minutes_spent'] ?? 0) ?></td>
+                            <td><?= hd_esc($r['created_at']) ?></td>
+                            <td><?= hd_esc($r['closed_at']) ?></td>
+                            <td><?= hd_esc($tech) ?></td>
+                            <td><?= hd_esc($r['subject']) ?></td>
+                            <td><?= hd_esc(substr($r['worklog_bits'] ?? '', 0, 120)) ?></td>
+                            <td><?= hd_esc($r['item_name'] ?? '') ?></td>
+                            <td><?= hd_esc(($r['unit_price'] ?? '') . ' ' . ($r['currency'] ?? '')) ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <a href="index.php" class="btn btn-outline-secondary px-3 mt-3">Back to reports</a>
 </div>
 </body>
 </html>

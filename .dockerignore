@@ -1,0 +1,8 @@
+.git
+**/node_modules
+**/.git
+*.md
+modules/clientinfo/uploads
+.env
+modules/helpdesk/cron/logs
+modules/backup_monitoring/cron/logs

@@ -1,4 +1,5 @@
 /vendor/
+.env
 
 # Backup monitoring — runtime logs (grow without bound; GitHub limit 100 MB)
 modules/backup_monitoring/cron/cron_log.txt

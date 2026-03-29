@@ -28,10 +28,10 @@ if (!$t) {
 
 $uid = (int) $_SESSION['user_id'];
 $isAdmin = isset($_SESSION['role']) && strtolower((string) $_SESSION['role']) === 'admin';
-$canSeeTicket = $isAdmin || hd_can('edit ticket') || (int) $t['assigned_user_id'] === $uid;
-if (!$canSeeTicket) {
+$canDrilldownAllQueues = hd_can_drilldown_all_queues();
+if (!hd_may_view_ticket_as_staff($t['assigned_user_id'] ?? null)) {
     http_response_code(403);
-    die('You can only view tickets assigned to you.');
+    die('You can only view tickets assigned to you or in your queue.');
 }
 
 function hd_ticket_has_completed_timesheet($conn, $ticketId)
@@ -42,6 +42,7 @@ function hd_ticket_has_completed_timesheet($conn, $ticketId)
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $redirectAddTab = '';
     if (!empty($_POST['save_status']) && hd_can('close ticket')) {
         $st = $_POST['status'] ?? '';
         if (!in_array($st, ['open', 'on_hold', 'closed'], true)) {
@@ -146,6 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
             $flash = 'Internal note saved.';
+            $redirectAddTab = 'internal';
         }
     }
 
@@ -156,6 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute();
         $stmt->close();
         $flash = 'Client-facing update logged.';
+        $redirectAddTab = 'public';
     }
 
     if (!empty($_POST['timesheet_start']) && hd_can('timesheet')) {
@@ -225,7 +228,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($flash && !$err) {
-        header('Location: ticket_view.php?id=' . $id . '&ok=1');
+        $tabQ = $redirectAddTab !== '' ? '&tab=' . rawurlencode($redirectAddTab) : '';
+        header('Location: ticket_view.php?id=' . $id . '&ok=1' . $tabQ);
         exit;
     }
 }
@@ -236,6 +240,8 @@ if (isset($_GET['ok'])) {
 if (isset($_GET['merge_ok'])) {
     $flash = 'Tickets merged successfully.';
 }
+
+$addEntryTab = (isset($_GET['tab']) && $_GET['tab'] === 'internal') ? 'internal' : 'public';
 
 hd_refresh_all_overdue($conn);
 $t = $conn->query("
@@ -270,177 +276,249 @@ while ($row = $techs->fetch_assoc()) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?= hd_ui_css() ?>
     <style>
-        .thread-item{border:1px solid #e6edf5;border-radius:10px;padding:10px;margin-bottom:10px;background:#fff}
-        .thread-item.internal{background:#f8fafc}
+        .thread-item{border:1px solid #e6edf5;border-radius:10px;padding:12px;margin-bottom:12px;background:#fff}
+        .thread-item.internal{background:#f8fafc;border-color:#dbe4f0}
+        .thread-html-frame{width:100%;min-height:200px;height:45vh;max-height:560px;border:1px solid #e6edf5;border-radius:8px;background:#fff}
+        .thread-plain{word-break:break-word}
+        .ticket-summary-card .hd-page-title{margin-bottom:8px}
+        .hd-ticket-add-tabs .card-header{background:#fff!important;border-bottom:1px solid #e2e8f0!important;padding:.65rem 1rem 0}
+        .hd-ticket-add-tabs .card-header-tabs{margin-bottom:-1px}
+        .hd-ticket-add-tabs .tab-pane{padding-top:.25rem}
     </style>
 </head>
-<body class="p-3">
-<div class="container-fluid">
+<body class="py-4">
+<div class="container-fluid hd-shell">
     <?php if ($flash): ?><div class="alert alert-success"><?= hd_esc($flash) ?></div><?php endif; ?>
     <?php if ($err): ?><div class="alert alert-danger"><?= hd_esc($err) ?></div><?php endif; ?>
+    <?php if (hd_helpdesk_scoped_to_own_queue()): ?>
+    <div class="alert alert-light border small text-muted py-2 mb-3">You are viewing this ticket as a <strong>technician</strong> (assigned to you only).</div>
+    <?php endif; ?>
 
-    <div class="d-flex justify-content-between align-items-start mb-3">
-        <div>
-            <h3 class="hd-page-title">Ticket #<?= (int) $id ?></h3>
-            <p class="mb-0"><strong>Subject:</strong> <?= hd_esc($t['subject']) ?></p>
-            <p class="mb-0"><strong>Requester:</strong> <?= hd_esc($t['requester_name']) ?> &lt;<?= hd_esc($t['requester_email']) ?>&gt;</p>
-            <p class="mb-0"><strong>Client:</strong> <?= hd_esc($t['client_name'] ?? '') ?></p>
-            <p class="mb-0"><strong>Created:</strong> <?= hd_esc($t['created_at']) ?> | <strong>Due:</strong> <?= $t['due_at'] ? hd_esc($t['due_at']) : '—' ?> | <span class="<?= hd_status_badge_class($t['status'], !empty($t['is_overdue']) && $t['status'] !== 'closed') ?>"><?= hd_esc($t['status']) ?></span></p>
+    <?php
+    $assignId = (int) ($t['assigned_user_id'] ?? 0);
+    $assignLbl = trim(($t['tech_name'] ?? '') . ' ' . ($t['tech_surname'] ?? ''));
+    ?>
+    <div class="card hd-card ticket-summary-card mb-3">
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div class="flex-grow-1">
+                <h3 class="hd-page-title">Ticket #<?= (int) $id ?></h3>
+                <p class="mb-1"><strong>Subject:</strong> <?= hd_esc($t['subject']) ?></p>
+                <p class="mb-1"><strong>Requester:</strong> <?= hd_esc($t['requester_name']) ?> &lt;<?= hd_esc($t['requester_email']) ?>&gt;</p>
+                <p class="mb-1"><strong>Client:</strong> <?= hd_esc($t['client_name'] ?? '') ?></p>
+                <p class="mb-1"><strong>Technician:</strong> <?php
+                    if ($assignId > 0 && $assignLbl !== '' && ($canDrilldownAllQueues || $assignId === $uid)) {
+                        echo '<a href="' . hd_esc(hd_helpdesk_module_path('technician.php', ['id' => $assignId])) . '">' . hd_esc($assignLbl) . '</a>';
+                    } elseif ($assignId > 0 && $assignLbl !== '') {
+                        echo hd_esc($assignLbl);
+                    } else {
+                        echo '—';
+                    }
+                ?></p>
+                <p class="mb-0"><strong>Created:</strong> <?= hd_esc($t['created_at']) ?> · <strong>Due:</strong> <?= $t['due_at'] ? hd_esc($t['due_at']) : '—' ?>
+                    · <span class="<?= hd_status_badge_class($t['status'], !empty($t['is_overdue']) && $t['status'] !== 'closed') ?>"><?= hd_esc($t['status']) ?></span></p>
+            </div>
+            <a href="<?= hd_esc(hd_helpdesk_index_path()) ?>" class="btn btn-outline-secondary align-self-start">Back to dashboard</a>
         </div>
-        <a href="index.php" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <?php if (hd_can('close ticket')): ?>
+        <div class="col-lg-6">
+            <div class="card h-100 hd-card">
+                <div class="card-header fw-semibold">Call status</div>
+                <div class="card-body">
+                    <form method="post" class="row g-2">
+                        <div class="col-12 col-sm-4">
+                            <select name="status" class="form-select">
+                                <option value="open" <?= $t['status'] === 'open' ? 'selected' : '' ?>>Open</option>
+                                <option value="on_hold" <?= $t['status'] === 'on_hold' ? 'selected' : '' ?>>On Hold</option>
+                                <option value="closed" <?= $t['status'] === 'closed' ? 'selected' : '' ?>>Close</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-8">
+                            <input type="text" name="on_hold_reason" class="form-control" placeholder="On hold note (required if on hold)" value="<?= hd_esc($t['on_hold_reason'] ?? '') ?>">
+                        </div>
+                        <div class="col-12">
+                            <input type="text" name="status_note" class="form-control" placeholder="Client-facing status description (optional)">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" name="save_status" value="1" class="btn btn-primary">Save status</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (hd_can('edit ticket')): ?>
+        <div class="col-lg-6">
+            <div class="card h-100 hd-card">
+                <div class="card-header fw-semibold">Assign technician</div>
+                <div class="card-body">
+                    <form method="post" class="row g-2 align-items-end">
+                        <div class="col">
+                            <select name="assigned_user_id" class="form-select">
+                                <option value="">Unassigned</option>
+                                <?php foreach ($techList as $u):
+                                    $lbl = trim($u['name'] . ' ' . $u['surname']) ?: $u['username'];
+                                    ?>
+                                    <option value="<?= (int) $u['id'] ?>" <?= (int) $t['assigned_user_id'] === (int) $u['id'] ? 'selected' : '' ?>><?= hd_esc($lbl) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" name="save_assign" value="1" class="btn btn-secondary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (hd_can('merge tickets')): ?>
+        <div class="col-12">
+            <div class="card hd-card">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                    <span class="text-muted small mb-0">Merge this ticket into another. This cannot be undone.</span>
+                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#mergeModal">Merge ticket</button>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <div class="row g-3">
-    <?php if (hd_can('close ticket')): ?>
-    <div class="col-lg-6">
-    <div class="card mb-3 hd-card">
-        <div class="card-header">Call status</div>
-        <div class="card-body">
-            <form method="post" class="row g-2">
-                <div class="col-md-4">
-                    <select name="status" class="form-select">
-                        <option value="open" <?= $t['status'] === 'open' ? 'selected' : '' ?>>Open</option>
-                        <option value="on_hold" <?= $t['status'] === 'on_hold' ? 'selected' : '' ?>>On Hold</option>
-                        <option value="closed" <?= $t['status'] === 'closed' ? 'selected' : '' ?>>Close</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <input type="text" name="on_hold_reason" class="form-control" placeholder="On hold note (required if on hold)" value="<?= hd_esc($t['on_hold_reason'] ?? '') ?>">
-                </div>
-                <div class="col-md-10">
-                    <input type="text" name="status_note" class="form-control" placeholder="Client-facing status description (optional)">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" name="save_status" value="1" class="btn btn-primary w-100">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    </div>
-    <?php endif; ?>
+        <div class="col-lg-8">
+            <div class="card hd-card">
+                <div class="card-header fw-semibold">Thread / notes</div>
+                <div class="card-body">
+                    <?php while ($m = $messages->fetch_assoc()): ?>
+                        <div class="thread-item <?= $m['direction'] === 'internal' ? 'internal' : '' ?>">
+                            <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                                <small class="text-muted"><?= hd_esc($m['created_at']) ?> — <?= hd_esc($m['direction']) ?></small>
+                                <?php if (!empty($m['add_to_worklog'])): ?><span class="badge bg-info">worklog</span><?php endif; ?>
+                            </div>
+                            <?php hd_echo_message_body($m); ?>
+                            <?php if (!empty($m['worklog_description'])): ?>
+                                <div class="small text-muted mt-2 pt-2 border-top"><?= nl2br(hd_esc($m['worklog_description'])) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endwhile; ?>
 
-    <?php if (hd_can('edit ticket')): ?>
-    <div class="col-lg-6">
-    <div class="card mb-3 hd-card">
-        <div class="card-header">Assign technician</div>
-        <div class="card-body">
-            <form method="post" class="row g-2">
-                <div class="col-md-8">
-                    <select name="assigned_user_id" class="form-select">
-                        <option value="">Unassigned</option>
-                        <?php foreach ($techList as $u):
-                            $lbl = trim($u['name'] . ' ' . $u['surname']) ?: $u['username'];
-                            ?>
-                            <option value="<?= (int) $u['id'] ?>" <?= (int) $t['assigned_user_id'] === (int) $u['id'] ? 'selected' : '' ?>><?= hd_esc($lbl) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <?php if (hd_can('reply email')): ?>
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="fw-semibold">Reply by email</h6>
+                        <form method="post">
+                            <textarea name="reply_body" class="form-control" rows="4" placeholder="Message to customer (HTML stripped on send; line breaks kept)"></textarea>
+                            <button type="submit" name="post_reply" value="1" class="btn btn-success mt-2">Send reply</button>
+                        </form>
+                    </div>
+                    <?php endif; ?>
                 </div>
-                <div class="col-md-4">
-                    <button type="submit" name="save_assign" value="1" class="btn btn-secondary">Update</button>
+            </div>
+
+            <div class="card hd-card hd-ticket-add-tabs mb-3">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs hd-nav-tabs" id="addEntryTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link <?= $addEntryTab === 'public' ? 'active' : '' ?>" id="add-tab-public" data-bs-toggle="tab" data-bs-target="#add-pane-public" type="button" role="tab" aria-controls="add-pane-public" aria-selected="<?= $addEntryTab === 'public' ? 'true' : 'false' ?>">
+                                Public update <span class="badge ms-1 text-bg-primary align-middle" style="font-size:.65rem">Requester</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link <?= $addEntryTab === 'internal' ? 'active' : '' ?>" id="add-tab-internal" data-bs-toggle="tab" data-bs-target="#add-pane-internal" type="button" role="tab" aria-controls="add-pane-internal" aria-selected="<?= $addEntryTab === 'internal' ? 'true' : 'false' ?>">
+                                Internal / worklog <span class="badge ms-1 text-bg-secondary align-middle" style="font-size:.65rem">Staff</span>
+                            </button>
+                        </li>
+                    </ul>
                 </div>
-            </form>
-        </div>
-    </div>
-    </div>
-    <?php endif; ?>
-    <?php if (hd_can('merge tickets')): ?>
-    <div class="col-lg-6">
-        <div class="card mb-3 hd-card">
-            <div class="card-header">Merge ticket</div>
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <div class="text-muted small">Merge this ticket into another ticket. This action cannot be undone.</div>
-                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#mergeModal">Merge</button>
+                <div class="card-body">
+                    <div class="tab-content" id="addEntryTabContent">
+                        <div class="tab-pane fade <?= $addEntryTab === 'public' ? 'show active' : '' ?>" id="add-pane-public" role="tabpanel" aria-labelledby="add-tab-public" tabindex="0">
+                            <p class="small text-muted mb-3">Visible on the ticket thread and to the requester (e.g. portal).<?php if (hd_can('reply email')): ?> To email them, use <strong>Reply by email</strong> in the thread above.<?php endif; ?></p>
+                            <form method="post">
+                                <label class="form-label small fw-semibold text-primary">Message to requester</label>
+                                <textarea name="client_visible_text" class="form-control" rows="4" placeholder="Update visible to the requester"></textarea>
+                                <button type="submit" name="client_update" value="1" class="btn btn-primary mt-3">Log public update</button>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade <?= $addEntryTab === 'internal' ? 'show active' : '' ?>" id="add-pane-internal" role="tabpanel" aria-labelledby="add-tab-internal" tabindex="0">
+                            <p class="small text-muted mb-3">Not shown to the requester. For private notes and optional billing worklog lines.</p>
+                            <form method="post">
+                                <label class="form-label small fw-semibold text-secondary">Internal note</label>
+                                <textarea name="internal_note" class="form-control mb-3" rows="4" placeholder="Private note — not visible to client"></textarea>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="add_worklog" value="1" id="wl">
+                                    <label class="form-check-label" for="wl">Add to worklog</label>
+                                </div>
+                                <label class="form-label small text-muted">Worklog label (internal)</label>
+                                <input type="text" name="worklog_description" class="form-control mb-3" placeholder="Short description for reports / billing">
+                                <button type="submit" name="post_internal" value="1" class="btn btn-dark">Save internal note</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <?php endif; ?>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-7">
-            <h5>Thread / notes</h5>
-            <?php while ($m = $messages->fetch_assoc()): ?>
-                <div class="thread-item <?= $m['direction'] === 'internal' ? 'internal' : '' ?>">
-                    <small class="text-muted"><?= hd_esc($m['created_at']) ?> — <?= hd_esc($m['direction']) ?>
-                        <?php if (!empty($m['add_to_worklog'])): ?><span class="badge bg-info">worklog</span><?php endif; ?>
-                    </small>
-                    <div><?= $m['direction'] === 'out' || $m['direction'] === 'in' ? nl2br(hd_esc($m['body'])) : nl2br(hd_esc($m['body'])) ?></div>
-                    <?php if (!empty($m['worklog_description'])): ?><div class="small text-muted mt-1"><?= nl2br(hd_esc($m['worklog_description'])) ?></div><?php endif; ?>
+        <div class="col-lg-4">
+            <div class="card hd-card mb-3">
+                <div class="card-header fw-semibold">Service &amp; pricing</div>
+                <div class="card-body">
+                    <form method="post">
+                        <label class="form-label">Service category</label>
+                        <select name="service_category_id" class="form-select" id="svcCat">
+                            <option value="0">—</option>
+                            <?php $categories->data_seek(0); while ($c = $categories->fetch_assoc()): ?>
+                                <option value="<?= (int) $c['id'] ?>" <?= $service && (int) $service['service_category_id'] === (int) $c['id'] ? 'selected' : '' ?>><?= hd_esc($c['category_name']) ?></option>
+                            <?php endwhile; ?>
+                        </select>
+                        <label class="form-label mt-2">Unit price item</label>
+                        <select name="category_price_id" class="form-select" id="svcPrice">
+                            <option value="0">—</option>
+                            <?php
+                            $prices = $conn->query('SELECT id, service_category_id, item_name, unit_price, currency FROM billing_category_prices ORDER BY service_category_id, item_name');
+                            while ($p = $prices->fetch_assoc()): ?>
+                                <option data-cat="<?= (int) $p['service_category_id'] ?>" value="<?= (int) $p['id'] ?>" <?= $service && (int) $service['category_price_id'] === (int) $p['id'] ? 'selected' : '' ?>><?= hd_esc($p['item_name'] . ' — ' . $p['unit_price'] . ' ' . $p['currency']) ?></option>
+                            <?php endwhile; ?>
+                        </select>
+                        <button type="submit" name="save_service" value="1" class="btn btn-primary mt-3">Save</button>
+                    </form>
                 </div>
-            <?php endwhile; ?>
-
-            <?php if (hd_can('reply email')): ?>
-            <h6 class="mt-3">Reply by email (customer)</h6>
-            <form method="post">
-                <textarea name="reply_body" class="form-control" rows="4" placeholder="Email body (HTML stripped on send; line breaks kept)"></textarea>
-                <button type="submit" name="post_reply" value="1" class="btn btn-success mt-2">Send reply</button>
-            </form>
-            <?php endif; ?>
-
-            <h6 class="mt-3">Client-visible update (logged only; use Reply to email customer)</h6>
-            <form method="post">
-                <textarea name="client_visible_text" class="form-control" rows="2"></textarea>
-                <button type="submit" name="client_update" value="1" class="btn btn-outline-primary mt-2">Log update</button>
-            </form>
-
-            <h6 class="mt-3">Internal / worklog</h6>
-            <form method="post">
-                <textarea name="internal_note" class="form-control mb-2" rows="2" placeholder="Internal note"></textarea>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" name="add_worklog" value="1" id="wl">
-                    <label class="form-check-label" for="wl">Add to worklog</label>
-                </div>
-                <input type="text" name="worklog_description" class="form-control mb-2" placeholder="Worklog description (internal)">
-                <button type="submit" name="post_internal" value="1" class="btn btn-outline-secondary">Save internal</button>
-            </form>
-        </div>
-        <div class="col-lg-5">
-            <h5 class="hd-section-title">Service &amp; pricing</h5>
-            <form method="post">
-                <label class="form-label">Service category</label>
-                <select name="service_category_id" class="form-select" id="svcCat">
-                    <option value="0">—</option>
-                    <?php $categories->data_seek(0); while ($c = $categories->fetch_assoc()): ?>
-                        <option value="<?= (int) $c['id'] ?>" <?= $service && (int) $service['service_category_id'] === (int) $c['id'] ? 'selected' : '' ?>><?= hd_esc($c['category_name']) ?></option>
-                    <?php endwhile; ?>
-                </select>
-                <label class="form-label mt-2">Unit price item</label>
-                <select name="category_price_id" class="form-select" id="svcPrice">
-                    <option value="0">—</option>
-                    <?php
-                    $prices = $conn->query('SELECT id, service_category_id, item_name, unit_price, currency FROM billing_category_prices ORDER BY service_category_id, item_name');
-                    while ($p = $prices->fetch_assoc()): ?>
-                        <option data-cat="<?= (int) $p['service_category_id'] ?>" value="<?= (int) $p['id'] ?>" <?= $service && (int) $service['category_price_id'] === (int) $p['id'] ? 'selected' : '' ?>><?= hd_esc($p['item_name'] . ' — ' . $p['unit_price'] . ' ' . $p['currency']) ?></option>
-                    <?php endwhile; ?>
-                </select>
-                <button type="submit" name="save_service" value="1" class="btn btn-primary mt-2">Save</button>
-            </form>
+            </div>
 
             <?php if (hd_can('timesheet')): ?>
-            <h5 class="mt-4">Timesheet</h5>
-            <form method="post" class="d-flex gap-2 mb-2">
-                <button type="submit" name="timesheet_start" value="1" class="btn btn-sm btn-success">Start</button>
-                <button type="submit" name="timesheet_stop" value="1" class="btn btn-sm btn-warning">Stop</button>
-            </form>
-            <ul class="list-group small">
-                <?php while ($ts = $timesheets->fetch_assoc()): ?>
-                    <li class="list-group-item">
-                        <?= hd_esc($ts['started_at']) ?> — <?= $ts['ended_at'] ? hd_esc($ts['ended_at']) : '(running)' ?>
-                    </li>
-                <?php endwhile; ?>
-            </ul>
+            <div class="card hd-card mb-3">
+                <div class="card-header fw-semibold">Timesheet</div>
+                <div class="card-body">
+                    <form method="post" class="d-flex gap-2 mb-3">
+                        <button type="submit" name="timesheet_start" value="1" class="btn btn-sm btn-success">Start</button>
+                        <button type="submit" name="timesheet_stop" value="1" class="btn btn-sm btn-warning">Stop</button>
+                    </form>
+                    <ul class="list-group list-group-flush small">
+                        <?php $timesheets->data_seek(0); while ($ts = $timesheets->fetch_assoc()): ?>
+                            <li class="list-group-item px-0">
+                                <?= hd_esc($ts['started_at']) ?> — <?= $ts['ended_at'] ? hd_esc($ts['ended_at']) : '(running)' ?>
+                            </li>
+                        <?php endwhile; ?>
+                    </ul>
+                </div>
+            </div>
             <?php endif; ?>
 
-            <h5 class="mt-4">Attachments</h5>
-            <ul>
-                <?php while ($a = $attachments->fetch_assoc()): ?>
-                    <li><a href="attachment.php?id=<?= (int) $a['id'] ?>" target="_blank"><?= hd_esc($a['filename']) ?></a></li>
-                <?php endwhile; ?>
-            </ul>
-            <form method="post" enctype="multipart/form-data">
-                <input type="file" name="attach[]" class="form-control" multiple>
-                <button type="submit" name="upload_more" value="1" class="btn btn-sm btn-secondary mt-2">Upload</button>
-            </form>
+            <div class="card hd-card">
+                <div class="card-header fw-semibold">Attachments</div>
+                <div class="card-body">
+                    <ul class="mb-3 ps-3">
+                        <?php $attachments->data_seek(0); while ($a = $attachments->fetch_assoc()): ?>
+                            <li><a href="attachment.php?id=<?= (int) $a['id'] ?>" target="_blank"><?= hd_esc($a['filename']) ?></a></li>
+                        <?php endwhile; ?>
+                    </ul>
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="file" name="attach[]" class="form-control" multiple>
+                        <button type="submit" name="upload_more" value="1" class="btn btn-sm btn-secondary mt-2">Upload</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

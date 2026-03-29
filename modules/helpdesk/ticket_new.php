@@ -3,6 +3,9 @@ require_once __DIR__ . '/includes/bootstrap.php';
 hd_require('create ticket');
 require_once __DIR__ . '/includes/NotificationService.php';
 
+$hdScopedTech = hd_helpdesk_scoped_to_own_queue();
+$uid = (int) $_SESSION['user_id'];
+
 $err = '';
 $ok = '';
 
@@ -38,11 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         if ($randomize) {
-            $pool = hd_randomize_pool_user_ids($conn);
-            if (count($pool) === 0) {
-                $pool = hd_technician_pool_user_ids($conn);
-            }
+            $pool = hd_random_assignment_pool_user_ids($conn);
             $assigned_user_id = hd_pick_random_assignee($conn, $pool);
+        }
+        if ($hdScopedTech) {
+            $assigned_user_id = $uid;
         }
 
         $cidSql = $client_id ? (int) $client_id : 'NULL';
@@ -154,23 +157,31 @@ $techs = $conn->query('SELECT id, name, surname, username FROM registers WHERE (
                     <option value="<?= (int) $q['id'] ?>"><?= hd_esc($q['name'] . ' — ' . $q['email']) ?></option>
                 <?php endwhile; ?>
             </select>
+            <?php if (hd_can('requesters')): ?>
             <small class="text-muted">Manage in <a href="requesters.php">Requesters</a></small>
+            <?php endif; ?>
         </div>
         <div class="mb-2">
-            <label class="form-label">Technician</label>
-            <select name="assigned_user_id" class="form-select">
-                <option value="">— Unassigned —</option>
-                <?php while ($u = $techs->fetch_assoc()):
-                    $lbl = trim($u['name'] . ' ' . $u['surname']);
-                    if ($lbl === '') {
-                        $lbl = $u['username'];
-                    }
-                    ?>
-                    <option value="<?= (int) $u['id'] ?>"><?= hd_esc($lbl) ?></option>
-                <?php endwhile; ?>
-            </select>
-            <?php if (hd_can('randomize assignment')): ?>
-                <div class="form-text">Randomized assignment is active for your role. Ticket will auto-assign to the least loaded technician.</div>
+            <?php if ($hdScopedTech): ?>
+                <label class="form-label">Assignment</label>
+                <p class="small text-muted border rounded bg-light py-2 px-3 mb-0">This ticket will be assigned to <strong>you</strong>.</p>
+                <input type="hidden" name="assigned_user_id" value="<?= (int) $uid ?>">
+            <?php else: ?>
+                <label class="form-label">Technician</label>
+                <select name="assigned_user_id" class="form-select">
+                    <option value="">— Unassigned —</option>
+                    <?php while ($u = $techs->fetch_assoc()):
+                        $lbl = trim($u['name'] . ' ' . $u['surname']);
+                        if ($lbl === '') {
+                            $lbl = $u['username'];
+                        }
+                        ?>
+                        <option value="<?= (int) $u['id'] ?>"><?= hd_esc($lbl) ?></option>
+                    <?php endwhile; ?>
+                </select>
+                <?php if (hd_can('randomize assignment')): ?>
+                    <div class="form-text">Randomized assignment is active for your role. Ticket will auto-assign to the least loaded technician.</div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
         <div class="mb-2">

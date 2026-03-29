@@ -78,25 +78,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <?= hd_ui_css() ?>
 </head>
-<body class="p-4">
-<div class="container" style="max-width:560px">
-    <h3 class="hd-page-title mb-1">Merge tickets</h3>
-    <p class="text-muted">Moves messages, attachments, timesheets and service row from the source ticket into the target ticket, then closes the source ticket.</p>
+<body class="py-4">
+<div class="hd-shell hd-shell-narrow">
+    <header class="hd-page-hero mb-3">
+        <h3 class="hd-heading mb-1">Merge tickets</h3>
+        <p class="text-muted small mb-0">Moves messages, attachments, timesheets and service row from the source ticket into the target ticket, then closes the source ticket.</p>
+    </header>
     <?php if ($err): ?><div class="alert alert-danger"><?= hd_esc($err) ?></div><?php endif; ?>
     <?php if ($ok): ?><div class="alert alert-success"><?= hd_esc($ok) ?></div><?php endif; ?>
-    <form method="post" class="card card-body hd-card">
-        <?php if ($returnTo !== ''): ?><input type="hidden" name="return_to" value="<?= hd_esc($returnTo) ?>"><?php endif; ?>
-        <div class="mb-2">
-            <label class="form-label">From ticket ID (source)</label>
-            <input type="number" name="from_id" class="form-control" required min="1">
+    <div class="card hd-filter-card hd-card">
+        <div class="card-header">Merge</div>
+        <div class="card-body">
+            <form method="post">
+                <?php if ($returnTo !== ''): ?><input type="hidden" name="return_to" value="<?= hd_esc($returnTo) ?>"><?php endif; ?>
+                <div class="mb-3">
+                    <label class="form-label">From ticket ID (source)</label>
+                    <input type="number" name="from_id" class="form-control" required min="1">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Into ticket ID (keep this ticket)</label>
+                    <input type="number" name="into_id" class="form-control" required min="1">
+                </div>
+                <div class="d-flex flex-wrap gap-2 pt-1">
+                    <button type="submit" class="btn btn-warning fw-semibold px-3">Merge</button>
+                    <a href="index.php" class="btn btn-outline-secondary px-3">Back to dashboard</a>
+                </div>
+            </form>
         </div>
-        <div class="mb-2">
-            <label class="form-label">Into ticket ID (keep this ticket)</label>
-            <input type="number" name="into_id" class="form-control" required min="1">
-        </div>
-        <button type="submit" class="btn btn-warning">Merge</button>
-        <a href="index.php" class="btn btn-secondary">Back</a>
-    </form>
+    </div>
 </div>
 </body>
 </html>
