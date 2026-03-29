@@ -1,6 +1,6 @@
 # Helpdesk cron (split runtime)
 
-**Linux live server:** start with **`../POP_CRON_LINUX_SERVER.md`** (copy-paste `crontab`, PHP 7.4 + 8.2, optional Docker POP).
+**Linux live server:** start with **`POP_CRON_LINUX_SERVER.md`** (copy-paste `crontab`, PHP 7.4 + 8.2, optional Docker POP).
 
 **Local Windows:** POP is **manual** — run **`helpdesk-pop-sync.ps1`** or **`helpdesk-pop-sync.cmd`** at the project root when you want to pull mail (Docker).
 
@@ -130,6 +130,6 @@ docker compose exec web php modules/helpdesk/cron/run_scheduled.php
 
 ## 5) Database + mail
 
-Schema: `modules/helpdesk/sql/migrate.sql`. Full Docker guide: **`docker/README.md`**.
+Schema: `modules/helpdesk/sql/migrate.sql`. Full Docker guide: **`../docker/README.md`**.
 
-POP deletes messages from the mailbox after successful import. Details: **`POP_SMTP_LIVE_SETUP.md`**.
+POP deletes messages from the mailbox after successful import. Details: **`POP_SMTP_LIVE_SETUP.md`** (this folder).

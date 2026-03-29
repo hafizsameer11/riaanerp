@@ -38,7 +38,7 @@ The Helpdesk is an **ERP-embedded** module (not a separate app). It appears unde
 - POP cron (`pop_sync.php`) with PHP 7.4 / IMAP constraint; scheduled runner (`run_scheduled.php`) for PHP 8.x
 - Docker-based PHP 7.4 + IMAP option for local Mac / split runtime
 - UI pass: shared styles (`hd_ui_css` in `includes/functions.php`), dashboard modal for new request, Assets tab loads Clients inside parent iframe, merge modal on ticket page
-- Documentation: POP/SMTP live setup, cron README, file inventory `HELPDESK_CHANGED_FILES.md`
+- Documentation: under **`docs/helpdesk/`** (POP/SMTP, cron, handoff, changed-files list)
 
 **Done — spec-oriented fixes (high level)**
 
@@ -68,13 +68,13 @@ These are **not blockers** for “module works,” but worth tracking for produc
 
 | Document | Path | Purpose |
 |----------|------|---------|
-| **This handoff guide** | `modules/helpdesk/HELPDESK_MODULE_HANDOFF.md` | Done / gaps / setup / doc index |
-| **Changed files list** | `modules/helpdesk/HELPDESK_CHANGED_FILES.md` | Inventory of touched paths |
-| **POP + SMTP production** | `modules/helpdesk/POP_SMTP_LIVE_SETUP.md` | Live mail, DB, cron, troubleshooting |
-| **Linux live cron (POP + scheduler)** | `modules/helpdesk/POP_CRON_LINUX_SERVER.md` | Production `crontab`, PHP 7.4/8.2 split, Docker option |
-| **Cron reference** | `modules/helpdesk/cron/README_CRON.md` | `pop_sync.php` vs `run_scheduled.php`, Docker wrappers |
-| **Spec vs code** | `modules/helpdesk/REQUIREMENTS_TRACEABILITY.md` | PDF §§1–11 mapped to files; gaps, partials, extras |
-| **Functional spec** | `modules/helpdesk/Helpdesk Module (1).pdf` | Original requirements (copy may also exist at project root) |
+| **This handoff guide** | `docs/helpdesk/HELPDESK_MODULE_HANDOFF.md` | Done / gaps / setup / doc index |
+| **Changed files list** | `docs/helpdesk/HELPDESK_CHANGED_FILES.md` | Inventory of touched paths |
+| **POP + SMTP production** | `docs/helpdesk/POP_SMTP_LIVE_SETUP.md` | Live mail, DB, cron, troubleshooting |
+| **Linux live cron (POP + scheduler)** | `docs/helpdesk/POP_CRON_LINUX_SERVER.md` | Production `crontab`, PHP 7.4/8.2 split, Docker option |
+| **Cron reference** | `docs/helpdesk/README_CRON.md` | `pop_sync.php` vs `run_scheduled.php`, Docker wrappers |
+| **Spec vs code** | `docs/helpdesk/REQUIREMENTS_TRACEABILITY.md` | PDF §§1–11 mapped to files; gaps, partials, extras |
+| **Functional spec** | `Helpdesk Module (1).pdf` (project root) | Original requirements |
 | **SQL — fresh DB** | `modules/helpdesk/sql/migrate.sql` | Full Helpdesk tables + seeds |
 | **SQL — admin permissions** | `modules/helpdesk/sql/seed_permissions.sql` | Grant Helpdesk perms to admin role |
 | **SQL — existing DB** | `modules/helpdesk/sql/patch_existing_db_helpdesk_notifications.sql` | Safe incremental updates |
@@ -89,12 +89,12 @@ These are **not blockers** for “module works,” but worth tracking for produc
 - **Database:** MySQL or MariaDB; create database (often named `clientzone` in this project).
 - **Composer:** Run at project root if vendor is missing: `composer install` (PHPMailer etc.).
 - **PHP extensions (web):** `mysqli`, `openssl`, `json`, etc. (typical LAMP).
-- **POP email cron:** PHP **7.4 CLI** with **imap** extension **or** use the **Docker** image + `modules/helpdesk/cron/php74` wrapper (see `README_CRON.md`).
+- **POP email cron:** PHP **7.4 CLI** with **imap** extension **or** use the **Docker** image + `modules/helpdesk/cron/php74` wrapper (see `docs/helpdesk/README_CRON.md`).
 
 ### 5.2 Application config
 
 - Copy or edit **`config.php`** (root) and **`modules/config.php`** with the new host’s DB host, user, password, database name.
-- If MySQL listens only on TCP from Docker/cron, you may need `DB_HOST_OVERRIDE` (see `POP_SMTP_LIVE_SETUP.md` / env notes in your deployment).
+- If MySQL listens only on TCP from Docker/cron, you may need `DB_HOST_OVERRIDE` (see `docs/helpdesk/POP_SMTP_LIVE_SETUP.md` / env notes in your deployment).
 
 ### 5.3 Database
 
@@ -137,8 +137,8 @@ Reconcile collation if imports fail (e.g. replace `utf8mb4_0900_ai_ci` with `utf
 
 **Spec:** `pop_sync.php` → **PHP 7.4 + IMAP** only; `run_scheduled.php` and the web app → **PHP 8.2 or 8.3**.
 
-Step-by-step for a **Linux server:** **`modules/helpdesk/POP_CRON_LINUX_SERVER.md`**.  
-Extra detail: **`modules/helpdesk/cron/README_CRON.md`**, **`POP_SMTP_LIVE_SETUP.md`**.
+Step-by-step for a **Linux server:** **`docs/helpdesk/POP_CRON_LINUX_SERVER.md`**.  
+Extra detail: **`docs/helpdesk/README_CRON.md`**, **`docs/helpdesk/POP_SMTP_LIVE_SETUP.md`**.
 
 **Local Windows dev:** run POP manually when needed — **`helpdesk-pop-sync.ps1`** at the project root (Docker), not Task Scheduler.
 
@@ -173,4 +173,4 @@ Loaded via sidebar iframe (paths relative to site root):
 
 ---
 
-*Last updated for handoff: module guide + new-machine steps. For a raw file list, see `HELPDESK_CHANGED_FILES.md`.*
+*Last updated for handoff: module guide + new-machine steps. For a raw file list, see `docs/helpdesk/HELPDESK_CHANGED_FILES.md`.*

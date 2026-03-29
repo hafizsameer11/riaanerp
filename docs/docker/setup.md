@@ -15,8 +15,8 @@ The **`vendor/`** folder must exist **on your PC** in the project root. Helpdesk
 **Option A — helper batch (recommended):** from the repo root:
 
 ```bat
-scripts\composer-xampp.bat install
-scripts\composer-xampp.bat update
+docs\development\composer-xampp.bat install
+docs\development\composer-xampp.bat update
 ```
 
 If XAMPP or Composer live elsewhere, set env vars once (PowerShell):
@@ -74,14 +74,14 @@ Then open:
 2. Server is already **`db`**; log in as **root** with the password from **`MYSQL_ROOT_PASSWORD`** in `.env` (default **`clientzone`** if you did not change it).
 3. Click **`clientzone`** (or create it if empty), then **Import** → choose your `.sql` file → **Go**.
 
-Upload limit in the container is **2G** for large dumps. If the UI still times out, use the CLI import in **`docker/README.md`**.
+Upload limit in the container is **2G** for large dumps. If the UI still times out, use the CLI import in **`docs/docker/README.md`**.
 
 Services that stay running:
 
 - **`db`** — MySQL  
 - **`web`** — Apache + PHP 8.2  
 
-Helpdesk POP (**PHP 7.4**) is **not** scheduled locally; run **`helpdesk-pop-sync.ps1`** or **`helpdesk-pop-sync.cmd`** when you want to pull mail. **Linux live:** **`modules/helpdesk/POP_CRON_LINUX_SERVER.md`**.
+Helpdesk POP (**PHP 7.4**) is **not** scheduled locally; run **`helpdesk-pop-sync.ps1`** or **`helpdesk-pop-sync.cmd`** when you want to pull mail. **Linux live:** **`docs/helpdesk/POP_CRON_LINUX_SERVER.md`**.
 
 ---
 
@@ -156,12 +156,12 @@ First time (or after changing the POP Dockerfile):
 docker compose --profile tools build helpdesk-php74
 ```
 
-**Linux production server** (`crontab` for POP + overdue/scheduled): **`modules/helpdesk/POP_CRON_LINUX_SERVER.md`**.  
-Also: **`docker/cron/crontab.example`**, **`modules/helpdesk/cron/README_CRON.md`**.
+**Linux production server** (`crontab` for POP + overdue/scheduled): **`docs/helpdesk/POP_CRON_LINUX_SERVER.md`**.  
+Also: **`docker/cron/crontab.example`**, **`docs/helpdesk/README_CRON.md`**.
 
 ---
 
 ## Where to read more
 
-- **`docker/README.md`** — large SQL imports, Helpdesk POP, ports, config overlay  
+- **`docs/docker/README.md`** — large SQL imports, Helpdesk POP, ports, config overlay  
 - **`docker-compose.yml`** (project root) — services, ports, profiles  

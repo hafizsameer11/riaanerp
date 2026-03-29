@@ -88,8 +88,8 @@ Recommended defaults:
 
 **Spec / architecture:** PHP **8.2 or 8.3** for the web app and for `run_scheduled.php`. **Only** `pop_sync.php` must run on **PHP 7.4 + IMAP** (native binary or **Docker** — see below).
 
-**Linux production:** copy-paste guide — **`modules/helpdesk/POP_CRON_LINUX_SERVER.md`**.  
-More variants (Docker POP, `host-gateway`, etc.): **`modules/helpdesk/cron/README_CRON.md`**.  
+**Linux production:** copy-paste guide — **`POP_CRON_LINUX_SERVER.md`** (this folder).  
+More variants (Docker POP, `host-gateway`, etc.): **`README_CRON.md`** (this folder).  
 **Local Windows:** run POP manually — **`helpdesk-pop-sync.ps1`** / **`helpdesk-pop-sync.cmd`** (no Task Scheduler in repo).
 
 Minimal native split (when `php7.4` exists on the server):
@@ -116,9 +116,9 @@ Important:
 
 ## 7) Full stack in Docker (MySQL + PHP 8.2 + POP tools)
 
-If XAMPP MySQL is unreliable, use the root **`docker-compose.yml`**: MySQL with large import limits and PHP 8.2 Apache. See **`docker/README.md`**.
+If XAMPP MySQL is unreliable, use the root **`docker-compose.yml`**: MySQL with large import limits and PHP 8.2 Apache. See **`../docker/README.md`**.
 
-POP sync uses **`docker compose --profile tools run --rm helpdesk-php74`** (same file). **`modules/helpdesk/cron/README_CRON.md`** has crontab lines.
+POP sync uses **`docker compose --profile tools run --rm helpdesk-php74`** (same file). **`README_CRON.md`** (this folder) has crontab lines.
 
 ---
 

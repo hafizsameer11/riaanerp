@@ -93,5 +93,5 @@ Adjust for your Compose file location and service names.
 ## Related docs
 
 - **`POP_SMTP_LIVE_SETUP.md`** — POP/SMTP UI, mail server, troubleshooting  
-- **`cron/README_CRON.md`** — Split runtime, Docker details, Windows notes  
+- **`README_CRON.md`** (this folder) — Split runtime, Docker details, Windows notes  
 - **`HELPDESK_MODULE_HANDOFF.md`** — Overall module index  

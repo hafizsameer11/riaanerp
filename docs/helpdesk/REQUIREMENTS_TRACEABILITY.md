@@ -181,6 +181,6 @@ Extracted text for printed pages **3–4** is mostly empty; layout/merge/email r
 
 - [POP_CRON_LINUX_SERVER.md](POP_CRON_LINUX_SERVER.md) — production `crontab`
 - [POP_SMTP_LIVE_SETUP.md](POP_SMTP_LIVE_SETUP.md) — mail + troubleshooting
-- [cron/README_CRON.md](cron/README_CRON.md) — PHP 7.4 / 8.2 split, Docker
+- [README_CRON.md](README_CRON.md) — PHP 7.4 / 8.2 split, Docker
 
 *Last generated for requirements analysis; update rows as client signs off or scope changes.*

@@ -58,7 +58,7 @@ This document lists files that were **created or modified** for the Helpdesk imp
 | `modules/helpdesk/cron/pop_sync.php` | POP3 ingest, threading, attachments, ticket create/reply. |
 | `modules/helpdesk/cron/run_scheduled.php` | Overdue refresh + scheduled job runner. |
 | Root `docker-compose.yml` | `db` (MySQL), `web` (PHP 8.2 Apache), `helpdesk-php74` (profile `tools` for POP). |
-| `docker/README.md` | How to run stack, import dumps, ports. |
+| `docs/docker/README.md` | How to run stack, import dumps, ports. |
 | `modules/helpdesk/cron/php74` | Bash wrapper: `docker compose run` (or legacy `USE_LEGACY_PHP74_DOCKER=1` + `docker run`). |
 | `modules/helpdesk/cron/docker-php74.ps1` | PowerShell: `docker compose run` for POP sync. |
 | `modules/helpdesk/cron/pop-sync-docker.cmd` | Windows CMD: `docker compose run` POP (manual). |
@@ -66,7 +66,7 @@ This document lists files that were **created or modified** for the Helpdesk imp
 | `helpdesk-pop-sync.cmd` (project root) | Same as `.ps1`, for CMD double-click. |
 | `.dockerignore` (project root) | Smaller Docker build context. |
 | `modules/helpdesk/cron/Dockerfile.php74-imap` | Docker image for PHP 7.4 CLI with IMAP. |
-| `modules/helpdesk/cron/README_CRON.md` | Cron setup notes. |
+| `docs/helpdesk/README_CRON.md` | Cron setup notes (docs moved out of `modules/helpdesk/`). |
 
 **Note:** Files under `modules/helpdesk/cron/logs/` are **runtime log output**, not hand-edited source.
 
@@ -82,15 +82,17 @@ This document lists files that were **created or modified** for the Helpdesk imp
 
 ---
 
-## Helpdesk — documentation (in module)
+## Helpdesk — documentation (root `docs/helpdesk/`)
 
 | File | Role |
 |------|------|
-| `modules/helpdesk/POP_SMTP_LIVE_SETUP.md` | Live POP/SMTP setup, PHP 7.4 split-runtime notes. |
-| `modules/helpdesk/POP_CRON_LINUX_SERVER.md` | Linux production `crontab` for POP + `run_scheduled.php`. |
-| `modules/helpdesk/HELPDESK_CHANGED_FILES.md` | This file — inventory of changed/added paths. |
-| `modules/helpdesk/HELPDESK_MODULE_HANDOFF.md` | Handoff: what’s done, gaps, doc index, new-machine setup. |
-| `modules/helpdesk/REQUIREMENTS_TRACEABILITY.md` | Spec (PDF) vs implementation matrix, gaps, optional enhancements. |
+| `docs/helpdesk/POP_SMTP_LIVE_SETUP.md` | Live POP/SMTP setup, PHP 7.4 split-runtime notes. |
+| `docs/helpdesk/POP_CRON_LINUX_SERVER.md` | Linux production `crontab` for POP + `run_scheduled.php`. |
+| `docs/helpdesk/HELPDESK_CHANGED_FILES.md` | This file — inventory of changed/added paths. |
+| `docs/helpdesk/HELPDESK_MODULE_HANDOFF.md` | Handoff: what’s done, gaps, doc index, new-machine setup. |
+| `docs/helpdesk/REQUIREMENTS_TRACEABILITY.md` | Spec (PDF) vs implementation matrix, gaps, optional enhancements. |
+| `docs/helpdesk/README_CRON.md` | Cron / Docker POP reference. |
+| `modules/helpdesk/cron/README.md` | Short pointer to `docs/helpdesk/` (no long-form docs under `modules/helpdesk/cron/`). |
 
 ---
 
@@ -98,13 +100,14 @@ This document lists files that were **created or modified** for the Helpdesk imp
 
 | File | Role |
 |------|------|
-| `modules/helpdesk/Helpdesk Module (1).pdf` | Functional specification (may duplicate at project root). |
+| `Helpdesk Module (1).pdf` (project root) | Functional specification. |
 
 ---
 
 ## Quick count
 
 - **ERP / shared:** 4 files (`config.php`, `modules/config.php`, `index.php`, `modules/reports/roles/permissions.php`).
-- **Helpdesk module:** 30+ tracked source files (PHP, SQL, Markdown, Dockerfile, cron wrapper) under `modules/helpdesk/`, excluding generated `cron/logs/*`.
+- **Helpdesk module:** 30+ tracked source files (PHP, SQL, Dockerfile, cron wrappers) under `modules/helpdesk/`, excluding generated `cron/logs/*`.
+- **Documentation:** Markdown under `docs/helpdesk/`, `docs/docker/`, `docs/backup_monitoring/`, `docs/development/` (see root `docs/README.md`).
 
 If you use Git: `modules/helpdesk/` may appear as a single untracked tree until committed; the four modified files above are tracked edits at repo root level.

@@ -53,7 +53,7 @@ docker compose --profile tools run --rm helpdesk-php74 php modules/helpdesk/cron
 
 Or from Windows: **`.\helpdesk-pop-sync.ps1`**
 
-See also **`modules/helpdesk/cron/README_CRON.md`**.
+See also **`docs/helpdesk/README_CRON.md`**.
 
 ## XAMPP + Docker together
 
