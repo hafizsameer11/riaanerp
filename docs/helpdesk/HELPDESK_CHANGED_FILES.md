@@ -79,6 +79,7 @@ This document lists files that were **created or modified** for the Helpdesk imp
 | `modules/helpdesk/sql/migrate.sql` | Full schema + seeds (fresh install). |
 | `modules/helpdesk/sql/seed_permissions.sql` | Seed Helpdesk permissions for admin role. |
 | `modules/helpdesk/sql/patch_existing_db_helpdesk_notifications.sql` | Incremental patch for existing DBs (rules, columns, scheduled attachments table, etc.). |
+| `modules/helpdesk/sql/migrate_helpdesk_complete.sql` | **Single file:** full Helpdesk schema + templates/rules + admin perms + “Helpdesk Technician” role + sample `registers` user (edit variables in file). |
 
 ---
 
