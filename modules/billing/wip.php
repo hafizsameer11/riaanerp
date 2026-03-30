@@ -217,7 +217,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
         $where[] = "w.client_id = " . (int) $_GET['client_id'];
       }
       if (!empty($_GET['quote_id'])) {
-        $where[] = "w.quote_id = " . (int) $_GET['quote_id'];
+        $where[] = "w.quote_id = '" . $conn->real_escape_string((string) $_GET['quote_id']) . "'";
       }
       if (!empty($_GET['status'])) {
         $where[] = "w.status = '" . $conn->real_escape_string($_GET['status']) . "'";
@@ -229,17 +229,41 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
 
       $filterSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
-      $res = $conn->query("
+      $wipSql = "
             SELECT w.*, c.client_name, c.currency, c.currency_symbol
             FROM wip w
             LEFT JOIN clients c ON w.client_id = c.id
             $filterSql
             ORDER BY c.client_name ASC
-        ");
+        ";
+      $res = $conn->query($wipSql);
+      $wipQueryError = '';
+      if ($res === false) {
+        $wipQueryError = $conn->error;
+        $wipSql = "
+            SELECT w.*, c.client_name
+            FROM wip w
+            LEFT JOIN clients c ON w.client_id = c.id
+            $filterSql
+            ORDER BY c.client_name ASC
+        ";
+        $res = $conn->query($wipSql);
+        if ($res === false) {
+          $wipQueryError = $conn->error;
+        }
+      }
+      $wipResultOk = ($res instanceof mysqli_result);
       ?>
       <tbody>
         <?php
         $i = 1;
+        if (!$wipResultOk): ?>
+          <tr>
+            <td colspan="10" class="text-danger">
+              Unable to load WIP list<?= $wipQueryError !== '' ? ': ' . htmlspecialchars($wipQueryError, ENT_QUOTES, 'UTF-8') : '' ?>
+            </td>
+          </tr>
+        <?php else:
         while ($row = $res->fetch_assoc()):
 
           ?>
@@ -251,8 +275,14 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
             <td><?= htmlspecialchars($row['description']) ?></td>
             <td><?= htmlspecialchars($row['note']) ?></td>
             <td class="text-end">
-              <?= $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '') ?> 
-              <?= number_format($row['monthly_price_incl_vat'], 2) ?>
+              <?php
+              $sym = $row['currency_symbol'] ?? '';
+              if ($sym === '' && !empty($row['currency'])) {
+                $sym = is_string($row['currency']) ? substr($row['currency'], 0, 1) : '';
+              }
+              echo htmlspecialchars($sym);
+              ?>
+              <?= number_format((float) ($row['monthly_price_incl_vat'] ?? 0), 2) ?>
             </td>
             <td class="text-center"><?= htmlspecialchars($row['terms']) ?></td>
             <td class="text-center"><?= htmlspecialchars($row['status']) ?></td>
@@ -264,7 +294,7 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
                   data-sales="<?= htmlspecialchars($row['sales_person']) ?>"
                   data-description="<?= htmlspecialchars($row['description']) ?>"
                   data-note="<?= htmlspecialchars($row['note']) ?>"
-                  data-price="<?= $row['currency_symbol'] ?> <?= $row['monthly_price_incl_vat'] ?>"
+                  data-price="<?= htmlspecialchars(($row['currency_symbol'] ?? '') . ' ' . ($row['monthly_price_incl_vat'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
                   data-status="<?= htmlspecialchars($row['status']) ?>">
                   <i class="fas fa-eye"></i> View
                 </button>
@@ -293,7 +323,10 @@ $quotes = $conn->query("SELECT id, quote_number FROM quotes");
               </div>
             </td>
           </tr>
-        <?php endwhile; ?>
+        <?php
+        endwhile;
+        endif;
+        ?>
       </tbody>
 
     </table>

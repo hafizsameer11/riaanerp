@@ -716,6 +716,23 @@ $hasExport = $hasAccess; // Can be changed to hasPermission('backup_monitoring',
             }
         }
 
+        /**
+         * Decode base64-wrapped email bodies (MIME parts stored raw before parser fix). Strips
+         * whitespace, fixes padding, then atob — so HTML renders in the modal iframe.
+         */
+        function decodeBase64EmailBodyIfNeeded(s) {
+            if (!s || typeof s !== 'string' || s.length < 80) return s;
+            const compact = s.replace(/\s+/g, '');
+            if (compact.length < 100 || !/^[A-Za-z0-9+\/=]+$/.test(compact)) return s;
+            const padLen = (4 - (compact.length % 4)) % 4;
+            const padded = compact + '='.repeat(padLen);
+            try {
+                const decoded = atob(padded);
+                if (decoded.indexOf('<') !== -1 || decoded.indexOf('&') !== -1) return decoded;
+            } catch (e) { /* not valid base64 */ }
+            return s;
+        }
+
         function openExportModal() {
             if (!hasExport) {
                 alert('You do not have permission to export');
@@ -968,20 +985,7 @@ $hasExport = $hasAccess; // Can be changed to hasPermission('backup_monitoring',
             setTimeout(function() {
                 const iframe = document.getElementById('emailBodyFrame_' + logId);
                 if (iframe && log.email_body) {
-                    let emailBody = log.email_body;
-                    
-                    // Decode base64 if needed
-                    if (emailBody.length > 100 && /^[A-Za-z0-9+\/=\s]+$/.test(emailBody.trim())) {
-                        try {
-                            const decoded = atob(emailBody.trim());
-                            // Check if decoded looks like HTML or text
-                            if (decoded.includes('<') || decoded.includes('&')) {
-                                emailBody = decoded;
-                            }
-                        } catch (e) {
-                            // Not base64, use as is
-                        }
-                    }
+                    let emailBody = decodeBase64EmailBodyIfNeeded(log.email_body);
                     
                     // Clean up UTF-8 BOM and encoding artifacts (remove "Â" characters)
                     emailBody = emailBody.replace(/\u00EF\u00BB\u00BF/g, ''); // Remove UTF-8 BOM
@@ -1132,20 +1136,7 @@ $hasExport = $hasAccess; // Can be changed to hasPermission('backup_monitoring',
                 setTimeout(function() {
                     const iframe = document.getElementById('emailBodyFrame_undefined_' + id);
                     if (iframe && data.email_body) {
-                        let emailBody = data.email_body;
-                        
-                        // Decode base64 if needed
-                        if (emailBody.length > 100 && /^[A-Za-z0-9+\/=\s]+$/.test(emailBody.trim())) {
-                            try {
-                                const decoded = atob(emailBody.trim());
-                                // Check if decoded looks like HTML or text
-                                if (decoded.includes('<') || decoded.includes('&')) {
-                                    emailBody = decoded;
-                                }
-                            } catch (e) {
-                                // Not base64, use as is
-                            }
-                        }
+                        let emailBody = decodeBase64EmailBodyIfNeeded(data.email_body);
                         
                         iframe.srcdoc = emailBody;
                     }

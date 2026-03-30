@@ -69,6 +69,19 @@
         return subject.replace(/^\*\*\*SPAM\*\*\*\s*/, '').trim();
     }
     
+    function decodeBase64EmailBodyIfNeeded(s) {
+        if (!s || typeof s !== 'string' || s.length < 80) return s;
+        const compact = s.replace(/\s+/g, '');
+        if (compact.length < 100 || !/^[A-Za-z0-9+\/=]+$/.test(compact)) return s;
+        const padLen = (4 - (compact.length % 4)) % 4;
+        const padded = compact + '='.repeat(padLen);
+        try {
+            const decoded = atob(padded);
+            if (decoded.indexOf('<') !== -1 || decoded.indexOf('&') !== -1) return decoded;
+        } catch (e) { }
+        return s;
+    }
+    
     function changePage(delta) {
         const newPage = currentPage + delta;
         if (newPage < 1) return;
@@ -214,21 +227,7 @@
                 if (data.success && data.data) {
                     const mail = data.data;
                     
-                    // Decode email body if needed
-                    let emailBody = mail.email_body || 'No email body available';
-                    
-                    // If it looks like base64, try to decode
-                    if (emailBody.length > 100 && /^[A-Za-z0-9+\/=\s]+$/.test(emailBody.trim())) {
-                        try {
-                            const decoded = atob(emailBody.trim());
-                            // Check if decoded looks like HTML or text
-                            if (decoded.includes('<') || decoded.includes('&')) {
-                                emailBody = decoded;
-                            }
-                        } catch (e) {
-                            // Not base64, use as is
-                        }
-                    }
+                    let emailBody = decodeBase64EmailBodyIfNeeded(mail.email_body || '') || 'No email body available';
                     
                     // Clean up UTF-8 BOM and encoding artifacts (remove "Â" characters)
                     emailBody = emailBody.replace(/\u00EF\u00BB\u00BF/g, ''); // Remove UTF-8 BOM

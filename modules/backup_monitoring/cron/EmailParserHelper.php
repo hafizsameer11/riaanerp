@@ -147,6 +147,168 @@ class EmailParserHelper {
     }
     
     /**
+     * Decode raw IMAP message body: handles multipart MIME, base64 and quoted-printable parts.
+     * Mirrors logic used by read_veeam_emails.php so VeeamCloud and similar mail stores HTML/text, not raw base64.
+     *
+     * @param string $rawBody Raw body from imap_body() / imap_fetchbody()
+     * @param callable|null $log Optional callback(string $message) for debug logging
+     * @return string Decoded body (typically HTML or plain text)
+     */
+    public static function decodeMimeEmailBody($rawBody, $logCallback = null) {
+        $writeLog = is_callable($logCallback) ? $logCallback : function () {};
+        
+        $body = '';
+        
+        if (preg_match('/--[a-zA-Z0-9]+/', $rawBody)) {
+            $writeLog('  ✓ Detected MIME multipart message');
+            
+            $boundary = '';
+            if (preg_match('/boundary="?([^"\s]+)"?/i', $rawBody, $matches)) {
+                $boundary = $matches[1];
+            } elseif (preg_match('/--([a-zA-Z0-9]+)/', $rawBody, $matches)) {
+                $boundary = $matches[1];
+            }
+            
+            if ($boundary) {
+                $writeLog('  ✓ Found boundary: ' . $boundary);
+                
+                $parts = preg_split('/--' . preg_quote($boundary, '/') . '(?:--)?/', $rawBody);
+                
+                foreach ($parts as $part) {
+                    $part = trim($part);
+                    if ($part === '') {
+                        continue;
+                    }
+                    
+                    if (preg_match('/Content-Type:\s*([^;\r\n]+)/i', $part, $typeMatches)) {
+                        $contentType = trim($typeMatches[1]);
+                        
+                        $content = preg_replace('/^.*?\r?\n\r?\n/s', '', $part, 1);
+                        if ($content === '' || $content === null) {
+                            $content = preg_replace('/^.*?\n\n/s', '', $part, 1);
+                        }
+                        $content = trim($content);
+                        
+                        $encoding = '';
+                        if (preg_match('/Content-Transfer-Encoding:\s*([^\r\n]+)/i', $part, $encMatches)) {
+                            $encoding = strtolower(trim($encMatches[1]));
+                        }
+                        
+                        if ($encoding === 'base64' || $encoding === 'quoted-printable') {
+                            if ($encoding === 'base64') {
+                                $decoded = @base64_decode($content, true);
+                                if ($decoded !== false && strlen($decoded) > 10) {
+                                    $content = $decoded;
+                                    $writeLog('  ✓ Decoded base64 part: ' . $contentType);
+                                }
+                            } else {
+                                $content = quoted_printable_decode($content);
+                            }
+                        }
+                        
+                        $content = mb_convert_encoding($content, 'UTF-8', 'auto');
+                        
+                        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+                        $content = preg_replace('/\xEF\xBB\xBF/', '', $content);
+                        $content = preg_replace('/\xC2\xA0/', ' ', $content);
+                        $content = preg_replace('/\x{00A0}/u', ' ', $content);
+                        $content = preg_replace('/\xC2(?![\x80-\xBF])/', '', $content);
+                        $content = preg_replace('/Â(?![\x80-\xBF])/u', '', $content);
+                        $content = preg_replace('/Â[\s\.,;:!?]/u', '', $content);
+                        
+                        if (stripos($contentType, 'text/html') !== false) {
+                            $body = $content;
+                            $writeLog('  ✓ Using HTML part');
+                            break;
+                        }
+                        if (stripos($contentType, 'text/plain') !== false && $body === '') {
+                            $body = $content;
+                            $writeLog('  ✓ Using plain text part');
+                        }
+                    } else {
+                        $content = trim($part);
+                        $content = preg_replace('/^[A-Za-z-]+:\s*[^\r\n]+\r?\n/m', '', $content);
+                        $content = preg_replace('/^\r?\n+/', '', $content);
+                        
+                        if (preg_match('/^[A-Za-z0-9+\/=\s]+$/', substr($content, 0, 100)) && strlen($content) > 50) {
+                            $decoded = @base64_decode($content, true);
+                            if ($decoded !== false && strlen($decoded) > 10) {
+                                $content = $decoded;
+                                $writeLog('  ✓ Decoded base64 content');
+                            }
+                        }
+                        
+                        $content = quoted_printable_decode($content);
+                        $content = mb_convert_encoding($content, 'UTF-8', 'auto');
+                        
+                        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+                        $content = preg_replace('/\xEF\xBB\xBF/', '', $content);
+                        $content = preg_replace('/\xC2\xA0/', ' ', $content);
+                        $content = preg_replace('/\x{00A0}/u', ' ', $content);
+                        $content = preg_replace('/\xC2(?![\x80-\xBF])/', '', $content);
+                        $content = preg_replace('/Â(?![\x80-\xBF])/u', '', $content);
+                        $content = preg_replace('/Â[\s\.,;:!?]/u', '', $content);
+                        
+                        if (!empty(trim($content)) && strlen($content) > 50) {
+                            $body = $content;
+                            $writeLog('  ✓ Using extracted content');
+                        }
+                    }
+                }
+            }
+        }
+        
+        if ($body === '') {
+            $writeLog('  ℹ Not multipart or extraction failed, trying direct method');
+            $body = $rawBody;
+            
+            $body = preg_replace('/--[a-zA-Z0-9]+\r?\n?/m', '', $body);
+            $body = preg_replace('/Content-Type:\s*[^\r\n]+\r?\n?/mi', '', $body);
+            $body = preg_replace('/Content-Transfer-Encoding:\s*[^\r\n]+\r?\n?/mi', '', $body);
+            $body = preg_replace('/charset="?[^"\r\n]+"?\r?\n?/mi', '', $body);
+            $body = preg_replace('/^\r?\n+/m', '', $body);
+            
+            $bodyTrimmed = trim($body);
+            if (strlen($bodyTrimmed) > 50 && preg_match('/^[A-Za-z0-9+\/=\s]+$/', substr($bodyTrimmed, 0, 200))) {
+                $decoded = @base64_decode($bodyTrimmed, true);
+                if ($decoded !== false && strlen($decoded) > 10) {
+                    $body = $decoded;
+                    $writeLog('  ✓ Decoded base64 email body');
+                }
+            }
+            
+            $body = quoted_printable_decode($body);
+            $body = mb_convert_encoding($body, 'UTF-8', 'auto');
+            
+            $body = preg_replace('/^\xEF\xBB\xBF/', '', $body);
+            $body = preg_replace('/\xEF\xBB\xBF/', '', $body);
+            $body = preg_replace('/\xC2\xA0/', ' ', $body);
+            $body = preg_replace('/\x{00A0}/u', ' ', $body);
+            $body = preg_replace('/\xC2(?![\x80-\xBF])/', '', $body);
+            $body = preg_replace('/Â(?![\x80-\xBF])/u', '', $body);
+            $body = preg_replace('/Â[\s\.,;:!?]/u', '', $body);
+        }
+        
+        $body = preg_replace('/^--[a-zA-Z0-9]+.*?--$/ms', '', $body);
+        $body = preg_replace('/^Content-Type:\s*[^\r\n]+$/mi', '', $body);
+        $body = preg_replace('/^Content-Transfer-Encoding:\s*[^\r\n]+$/mi', '', $body);
+        $body = preg_replace('/^[A-Za-z-]+:\s*[^\r\n]+$/m', '', $body);
+        $body = preg_replace('/^\r?\n+/m', '', $body);
+        $body = preg_replace('/\r?\n+$/m', '', $body);
+        $body = trim($body);
+        
+        $body = preg_replace('/^\xEF\xBB\xBF/', '', $body);
+        $body = preg_replace('/\xEF\xBB\xBF/', '', $body);
+        $body = preg_replace('/\xC2\xA0/', ' ', $body);
+        $body = preg_replace('/\x{00A0}/u', ' ', $body);
+        $body = preg_replace('/\xC2(?![\x80-\xBF])/', '', $body);
+        $body = preg_replace('/Â(?![\x80-\xBF])/u', '', $body);
+        $body = preg_replace('/Â[\s\.,;:!?]/u', '', $body);
+        
+        return $body;
+    }
+    
+    /**
      * Test IMAP connection
      * @param string $imapHost IMAP host
      * @param string $email Email address

@@ -30,7 +30,7 @@ if (!empty($_GET['client_id'])) {
   $where[] = "w.client_id = " . (int) $_GET['client_id'];
 }
 if (!empty($_GET['quote_id'])) {
-  $where[] = "w.quote_id = " . (int) $_GET['quote_id'];
+  $where[] = "w.quote_id = '" . $conn->real_escape_string((string) $_GET['quote_id']) . "'";
 }
 if (!empty($_GET['status'])) {
   $where[] = "w.status = '" . $conn->real_escape_string($_GET['status']) . "'";
@@ -52,6 +52,19 @@ $query = "
 ";
 
 $result = $conn->query($query);
+if ($result === false) {
+  $query = "
+  SELECT w.*, c.client_name
+  FROM wip w
+  LEFT JOIN clients c ON w.client_id = c.id
+  $filterSql
+  ORDER BY c.client_name ASC
+";
+  $result = $conn->query($query);
+}
+if ($result === false) {
+  die('Export failed: ' . htmlspecialchars($conn->error, ENT_QUOTES, 'UTF-8'));
+}
 
 // Setup Excel
 $writer = new XLSXWriter();
@@ -79,7 +92,10 @@ $writer->writeSheetHeader('WIP Items', $header);
 
 // Add rows
 while ($row = $result->fetch_assoc()) {
-  $currencySymbol = $row['currency_symbol'] ? $row['currency_symbol'] : (isset($row['currency'][0]) ? $row['currency'][0] : '');
+  $currencySymbol = $row['currency_symbol'] ?? '';
+  if ($currencySymbol === '' && !empty($row['currency'])) {
+    $currencySymbol = is_string($row['currency']) ? substr($row['currency'], 0, 1) : '';
+  }
   
   $writer->writeSheetRow('WIP Items', [
     (int)$row['id'],

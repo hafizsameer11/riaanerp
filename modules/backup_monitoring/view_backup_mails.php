@@ -542,6 +542,18 @@ $viewLogs = $jobId > 0;
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         <?php if ($viewLogs): ?>
+        function decodeBase64EmailBodyIfNeeded(s) {
+            if (!s || typeof s !== 'string' || s.length < 80) return s;
+            const compact = s.replace(/\s+/g, '');
+            if (compact.length < 100 || !/^[A-Za-z0-9+\/=]+$/.test(compact)) return s;
+            const padLen = (4 - (compact.length % 4)) % 4;
+            const padded = compact + '='.repeat(padLen);
+            try {
+                const decoded = atob(padded);
+                if (decoded.indexOf('<') !== -1 || decoded.indexOf('&') !== -1) return decoded;
+            } catch (e) { }
+            return s;
+        }
         /**
          * Show email body in modal
          */
@@ -549,19 +561,7 @@ $viewLogs = $jobId > 0;
             const emailBody = document.getElementById('email_body_' + logId);
             if (emailBody) {
                 let bodyContent = emailBody.textContent || emailBody.innerText;
-                
-                // Try to decode base64 if it looks like base64
-                if (bodyContent.length > 100 && /^[A-Za-z0-9+\/=\s]+$/.test(bodyContent.trim())) {
-                    try {
-                        const decoded = atob(bodyContent.trim());
-                        // Check if decoded looks like HTML or text
-                        if (decoded.includes('<') || decoded.includes('&') || decoded.length > 0) {
-                            bodyContent = decoded;
-                        }
-                    } catch (e) {
-                        // Not base64, use as is
-                    }
-                }
+                bodyContent = decodeBase64EmailBodyIfNeeded(bodyContent);
                 
                 // Display in modal - if it's HTML, use innerHTML, otherwise use textContent
                 const contentDiv = document.getElementById('emailBodyContent');

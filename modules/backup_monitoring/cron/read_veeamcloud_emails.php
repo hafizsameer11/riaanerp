@@ -190,15 +190,15 @@ foreach ($allEmails as $emailNo) {
         // Check if email is SEEN or UNSEEN (for logging purposes only)
         $isUnseen = !isset($overview->seen) || $overview->seen == 0;
         
-        // Get email body
-        $body = imap_body($inbox, $emailNo);
-        if ($body === false) {
-            $body = imap_fetchbody($inbox, $emailNo, 1);
+        // Raw IMAP body; Veeam Cloud notifications are often multipart/alternative with base64 HTML
+        $rawBody = imap_body($inbox, $emailNo);
+        if ($rawBody === false || trim((string) $rawBody) === '') {
+            $rawBody = imap_fetchbody($inbox, $emailNo, 1);
         }
         
-        // Decode if needed
-        $body = quoted_printable_decode($body);
-        $body = mb_convert_encoding($body, 'UTF-8', 'ISO-8859-1');
+        $body = EmailParserHelper::decodeMimeEmailBody($rawBody, function ($msg) use ($logFile) {
+            logMessage($msg, $logFile);
+        });
         
         // Remove UTF-8 BOM and encoding artifacts
         $body = preg_replace('/^\xEF\xBB\xBF/', '', $body);
@@ -209,8 +209,9 @@ foreach ($allEmails as $emailNo) {
         $body = preg_replace('/Â(?![\x80-\xBF])/u', '', $body);
         $body = preg_replace('/Â[\s\.,;:!?]/u', '', $body);
         
-        // Remove HTML tags for better parsing
+        // Remove HTML tags for better parsing (body is decoded HTML/text after MIME handling)
         $bodyPlain = strip_tags($body);
+        $bodyPlain = html_entity_decode($bodyPlain, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         
         // Remove UTF-8 BOM and encoding artifacts from bodyPlain as well
         $bodyPlain = preg_replace('/^\xEF\xBB\xBF/', '', $bodyPlain);
